@@ -19,27 +19,118 @@ padding:0 10px
 </body>
 <script>
 
-const nouns = [
-    "lions",
-    "tigers",
-    "bears"
-];
+const button = document.getElementById("get-snowclone");
+// Setting this on the tag means it isn't reset on refresh.
+button.disabled = true
 
-const rollNoun = () => {
-    var i = Math.floor(Math.random() * nouns.length); 
+const output = (s) => {
+    document.getElementById("output-snowclone").innerHTML = String(s)
+}
 
-    return nouns[i];
-};
+const setup = (table) => {
+    // Length of the file format's magic number.
+    const MAGIC_LENGTH = 4;
+    // ASCII 'l'
+    const L_BYTE = 0x6C;
+    if (
+        table.length < MAGIC_LENGTH
+        || table[0] != L_BYTE
+        || table[1] != L_BYTE
+        || table[2] != L_BYTE
+    ) {
+        output("Table was not .lll format");
+        return
+    }
+    
+    if (table[3] != 0) {
+        output("Table was an unsupported version of .lll format:" + table[3]);
+        return
+    }
 
-const capitalizeFirst = (s) => (
-    s.charAt(0).toUpperCase() + s.slice(1)
-);
+    const BLOCK_HEADER_LENGTH = 4;
 
-document.getElementById("get-snowclone").onclick = function() {
-    document.getElementById("output-snowclone").innerHTML = `
+    const SINGULAR_NOUN = 0b1;
+    const PLURAL_NOUN   = 0b10;
+
+    const decoder = new TextDecoder('utf8')
+
+    const singluarNouns = [];
+    const pluralNouns = [];
+
+    let i = MAGIC_LENGTH;
+    while (i < table.length) {
+        const len = table[i];
+        if (len < BLOCK_HEADER_LENGTH) {
+            output("Table seems corrupted: Block length was invalid: " + len);
+            return
+        }
+        
+        const blockEnd = i + len;
+        if (blockEnd > table.length) {
+            break
+        }
+        
+        const lexeme = decoder.decode(
+            table.slice(
+                i + BLOCK_HEADER_LENGTH, 
+                blockEnd
+            )
+        );
+        
+        // first flag byte
+        const flags1 = table[i + 1];
+
+        if (flags1 & SINGULAR_NOUN) {
+            singluarNouns.push(lexeme)
+        }
+        
+        if (flags1 & PLURAL_NOUN) {
+            pluralNouns.push(lexeme)
+        }
+
+        // Skip reading last two flag bytes for now
+        
+        i = blockEnd
+    }
+    
+    const nouns = singluarNouns.concat(pluralNouns)
+
+    if (nouns.length <= 0) {
+        output("Table contained no nouns");
+        return
+    }
+
+    const rollNoun = () => {
+        var i = Math.floor(Math.random() * nouns.length);
+
+        return nouns[i];
+    };
+
+    const capitalizeFirst = (s) => (
+        s.charAt(0).toUpperCase() + s.slice(1)
+    );
+
+    button.onclick = () => {
+        output(`
 ${capitalizeFirst(rollNoun())} and ${rollNoun()} and ${rollNoun()}, oh my!
-`;
-};
+`);
+    };
+
+    button.disabled = false
+}
+
+try {
+    // TODO Document the Labelled Lexeme List format
+    fetch("db.lll")
+        .then((response) => response.blob())
+        .then((blob) => blob.arrayBuffer())
+        .then((ab) => {
+            setup(new Uint8Array(ab));
+        })
+        .catch(output)
+} catch (e) {
+    output(e);
+}
 
 </script>
 </html>
