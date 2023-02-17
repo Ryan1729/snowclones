@@ -41,7 +41,7 @@ const setup = (table) => {
         output("Table was not .lll format");
         return
     }
-    
+
     if (table[3] != 0) {
         output("Table was an unsupported version of .lll format:" + table[3]);
         return
@@ -59,40 +59,48 @@ const setup = (table) => {
 
     let i = MAGIC_LENGTH;
     while (i < table.length) {
-        const len = table[i];
+        const len = table[i] & 0x7F;
         if (len < BLOCK_HEADER_LENGTH) {
             output("Table seems corrupted: Block length was invalid: " + len);
             return
         }
-        
+
         const blockEnd = i + len;
         if (blockEnd > table.length) {
             break
         }
-        
+
+        const fef = (table[i] & 0x80) == 0x80;
+
+        if (fef) {
+            // Skip because we don't know what the FEF does yet.
+            i = blockEnd
+            continue
+        }
+
         const lexeme = decoder.decode(
             table.slice(
-                i + BLOCK_HEADER_LENGTH, 
+                i + BLOCK_HEADER_LENGTH,
                 blockEnd
             )
         );
-        
+
         // first flag byte
         const flags1 = table[i + 1];
 
         if (flags1 & SINGULAR_NOUN) {
             singluarNouns.push(lexeme)
         }
-        
+
         if (flags1 & PLURAL_NOUN) {
             pluralNouns.push(lexeme)
         }
 
         // Skip reading last two flag bytes for now
-        
+
         i = blockEnd
     }
-    
+
     const nouns = singluarNouns.concat(pluralNouns)
 
     if (nouns.length <= 0) {
@@ -120,7 +128,6 @@ ${capitalizeFirst(rollNoun())} and ${rollNoun()} and ${rollNoun()}, oh my!
 }
 
 try {
-    // TODO Document the Labelled Lexeme List format
     fetch("db.lll")
         .then((response) => response.blob())
         .then((blob) => blob.arrayBuffer())
