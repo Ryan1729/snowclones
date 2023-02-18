@@ -1,0 +1,7 @@
+[package]
+name = "llledit"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+enable-ansi-support = "0.2.1"
