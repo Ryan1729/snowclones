@@ -1,3 +1,5 @@
+use std::{io::Read, path::PathBuf};
+
 mod printer {
     #[derive(Default)]
     pub struct Printer {
@@ -36,7 +38,22 @@ mod printer {
 }
 use printer::Printer;
 
-fn main() {
+fn main() -> Result<(), Box<dyn std::error::Error>> {
+    let mut file = {
+        let mut args = std::env::args();
+        args.next(); // exe name
+
+        let path = args.next()
+            .map(PathBuf::from)
+            .unwrap_or_else(|| PathBuf::from("db.lll"));
+
+        std::fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(&path)
+            .map_err(|e| format!("{}: {e}", path.to_string_lossy()))?
+    };
+
     let p = match enable_ansi_support::enable_ansi_support() {
         Ok(()) => Printer::ansi(),
         Err(e) => {
@@ -48,13 +65,35 @@ fn main() {
     p.enable_alternate_screen();
     p.clear();
     p.move_home();
-    println!("Hello, world!");
 
-    for i in (1..=3).rev() {
-        println!("{i}");
+    let initial_len = file.metadata()?.len();
+    // Round up to nearest 256 bytes, because we expect most of the time at least
+    // one lexeme will be added.
+    let capacity = (initial_len | 0xFF) + 1;
+    let mut lll = Vec::with_capacity(usize::try_from(capacity).unwrap_or_default());
+    file.read_to_end(&mut lll)?;
 
-        std::thread::sleep(std::time::Duration::from_millis(1000));
+    println!("{} bytes", lll.len());
+    println!("q then enter to quit");
+
+    const MAX_LEXEME_LENGTH: u8 = 127;
+    let mut input = String::with_capacity(usize::from(MAX_LEXEME_LENGTH));
+
+    let stdin = std::io::stdin();
+    loop {
+        input.clear();
+        if let Err(e) = stdin.read_line(&mut input) {
+            eprintln!("{e}");
+            // Do the cleanup, instead of just exiting.
+            break
+        }
+
+        if input.starts_with('q') {
+            break
+        }
     }
 
     p.disable_alternate_screen();
+
+    Ok(())
 }
