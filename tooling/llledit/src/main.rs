@@ -4,6 +4,7 @@ mod printer {
         enable_alt: &'static str,
         disable_alt: &'static str,
         clear: &'static str,
+        move_home: &'static str,
     }
 
     impl Printer {
@@ -11,7 +12,8 @@ mod printer {
             Self {
                 enable_alt: "\u{001b}[?1049h",
                 disable_alt: "\u{001b}[?1049l",
-                clear: "\u{001b}[2J"
+                clear: "\u{001b}[2J",
+                move_home: "\u{001b}[H",
             }
         }
 
@@ -25,6 +27,10 @@ mod printer {
 
         pub fn clear(&self) {
             print!("{}", self.clear);
+        }
+
+        pub fn move_home(&self) {
+            print!("{}", self.move_home);
         }
     }
 }
@@ -41,7 +47,7 @@ fn main() {
 
     p.enable_alternate_screen();
     p.clear();
-
+    p.move_home();
     println!("Hello, world!");
 
     for i in (1..=3).rev() {
