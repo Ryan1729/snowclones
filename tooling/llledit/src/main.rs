@@ -74,13 +74,91 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     file.read_to_end(&mut lll)?;
 
     println!("{} bytes", lll.len());
-    println!("q then enter to quit");
 
     const MAX_LEXEME_LENGTH: u8 = 127;
+    const MAX_LEXEME_LENGTH_ERROR: &'static str = "Lexemes canot be more than 127 bytes long!";
     let mut input = String::with_capacity(usize::from(MAX_LEXEME_LENGTH));
+
+    struct Lexeme([u8; MAX_LEXEME_LENGTH as _]);
+
+    impl Default for Lexeme {
+        fn default() -> Self {
+            Self([0; MAX_LEXEME_LENGTH as _])
+        }
+    }
+
+    impl std::fmt::Display for Lexeme {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match std::str::from_utf8(&self.0) {
+                Ok(s) => write!(f, "{s}"),
+                Err(e) => write!(f, "{e}"),
+            }
+
+        }
+    }
+
+    impl TryFrom<&str> for Lexeme {
+        type Error = &'static str;
+
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            if value.is_empty() {
+                Err("")
+            } else if value.len() > usize::from(MAX_LEXEME_LENGTH) {
+                Err(MAX_LEXEME_LENGTH_ERROR)
+            } else {
+                let mut lexeme = [0; MAX_LEXEME_LENGTH as _];
+
+                for (i, b) in value.as_bytes().iter().enumerate() {
+                    lexeme[i] = *b;
+                }
+
+                Ok(Lexeme(lexeme))
+            }
+        }
+    }
+
+    type Flags = u16;
+
+    // Labelled Lexeme
+    #[derive(Default)]
+    struct LL {
+        lexeme: Lexeme,
+        flags: Flags
+    }
+
+    enum State {
+        Menu,
+        AddChars{ ll: LL },
+        AddFlags{ ll: LL },
+    }
+
+    let mut state = State::Menu;
+    let mut err: &'static str = "";
 
     let stdin = std::io::stdin();
     loop {
+        p.clear();
+        p.move_home();
+
+        match state {
+            State::Menu => {
+                println!("a) Add a lexeme");
+                println!("q then enter to quit");
+                println!("{err}");
+            }
+            State::AddChars{ ref mut ll } => {
+                println!("Add a lexeme");
+                println!();
+                println!("{err}");
+                print!(">{}", ll.lexeme);
+            }
+            State::AddFlags{ ref mut ll } => {
+                println!("Add flags");
+                println!("TODO");
+                println!("{err}");
+            }
+        }
+
         input.clear();
         if let Err(e) = stdin.read_line(&mut input) {
             eprintln!("{e}");
@@ -88,8 +166,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             break
         }
 
-        if input.starts_with('q') {
-            break
+        state = match state {
+            State::Menu => {
+                match input.chars().next() {
+                    Some('q') => break,
+                    Some('a') => {
+                        err = "";
+                        State::AddChars{ ll: <_>::default() }
+                    },
+                    None => {
+                        err = "Type a letter to select an option";
+                        state
+                    },
+                    _ => {
+                        err = "???";
+                        state
+                    }
+                }
+            }
+            State::AddChars{ mut ll } => {
+                // TODO? Check if lexeme is already in the lll?
+                match Lexeme::try_from(input.as_str()) {
+                    Ok(lexeme) => {
+                        ll.lexeme = lexeme;
+                        err = "";
+                        State::AddFlags{ ll }
+                    },
+                    Err(e) => {
+                        err = e;
+                        State::AddChars{ ll }
+                    }
+                }
+            }
+            State::AddFlags{ mut ll } => {
+                todo!();
+            }
         }
     }
 
