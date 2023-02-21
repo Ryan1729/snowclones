@@ -38,6 +38,16 @@ mod printer {
 }
 use printer::Printer;
 
+type ErrMsg = &'static str;
+
+enum FlagsCommand {
+
+}
+
+fn parse_flags_commands(input: &str) -> Result<Box<[FlagsCommand]>, ErrMsg> {
+    Err("TODO parse_flags_commands")
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut file = {
         let mut args = std::env::args();
@@ -76,7 +86,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("{} bytes", lll.len());
 
     const MAX_LEXEME_LENGTH: u8 = 127;
-    const MAX_LEXEME_LENGTH_ERROR: &'static str = "Lexemes canot be more than 127 bytes long!";
+    const MAX_LEXEME_LENGTH_ERROR: ErrMsg = "Lexemes canot be more than 127 bytes long!";
     let mut input = String::with_capacity(usize::from(MAX_LEXEME_LENGTH));
 
     struct Lexeme([u8; MAX_LEXEME_LENGTH as _]);
@@ -98,7 +108,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     impl TryFrom<&str> for Lexeme {
-        type Error = &'static str;
+        type Error = ErrMsg;
 
         fn try_from(value: &str) -> Result<Self, Self::Error> {
             if value.is_empty() {
@@ -133,7 +143,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let mut state = State::Menu;
-    let mut err: &'static str = "";
+    let mut err: ErrMsg = "";
 
     let stdin = std::io::stdin();
     loop {
@@ -153,8 +163,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 print!(">{}", ll.lexeme);
             }
             State::AddFlags{ ref mut ll } => {
-                println!("Add flags");
-                println!("TODO");
+                println!("Add flags to");
+                println!("{}", ll.lexeme);
+                println!("To change the flags pick a operation prefix:");
+                println!("s) Set bits. t) Toggle bits. u) Un-set bits.");
+                println!("... then enter it followed by a comma-separated");
+                println!("list of bit indexes and/or names.");
+                println!("e) Edit lexeme. f) Finished editing flags.");
                 println!("{err}");
             }
         }
@@ -199,7 +214,21 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 }
             }
             State::AddFlags{ mut ll } => {
-                todo!();
+                match parse_flags_commands(&input) {
+                    Ok(commands) => {
+                        for command in commands.iter() {
+                            use FlagsCommand::*;
+                            match *command {
+                                
+                            }
+                        }
+                        State::AddFlags{ ll }
+                    },
+                    Err(e) => {
+                        err = e;
+                        State::AddFlags{ ll }
+                    }
+                }
             }
         }
     }
