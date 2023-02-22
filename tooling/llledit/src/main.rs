@@ -40,12 +40,105 @@ use printer::Printer;
 
 type ErrMsg = &'static str;
 
-enum FlagsCommand {
+type Flags = u16;
 
+type FlagIndex = u8;
+
+#[derive(Clone, Copy, Debug)]
+enum FlagsCommand {
+    Set(FlagIndex),
+// TODO
+    //Toggle(FlagIndex),
+    //Unset(FlagIndex),
+    //EditLexeme,
+    //FinishedFlags,
 }
 
 fn parse_flags_commands(input: &str) -> Result<Box<[FlagsCommand]>, ErrMsg> {
-    Err("TODO parse_flags_commands")
+    use FlagsCommand::*;
+
+    enum ParseState {
+        Initial,
+        SetIndex,
+    // TODO
+        //ToggleIndex,
+        //UnsetIndex,
+    }
+    use ParseState::*;
+
+    let mut state = Initial;
+
+    // Commands can be packed as tightly as two bytes: 's0'
+    // But often they would take up more: 's10,11'
+    // So half the input length is a (generous) upper bound.
+    let mut output = Vec::with_capacity(input.len() / 2);
+
+    const MAX_INDEX_DIGITS: u32 = FlagIndex::MAX.ilog10() + 1;
+    let mut digit_buffer = [0u8; MAX_INDEX_DIGITS as _];
+    let mut digit_buffer_i = 0;
+
+    for c in input.chars() {
+        macro_rules! push_buffered {
+            ($command_fn: path) => ({
+                if digit_buffer_i == 0 {
+                    // Nothing to push yet.
+                } else {
+                    let s = std::str::from_utf8(&digit_buffer[..digit_buffer_i])
+                        .map_err(|_| "non-UTF8 digit_buffer")?;
+
+                    let flag_index =
+                        s
+                        .parse()
+                        .map_err(|_| "non-decimal-digit numeral byte in digit_buffer")?;
+
+                    output.push($command_fn(flag_index));
+
+                    digit_buffer_i = 0;
+                }
+            })
+        }
+
+        macro_rules! push_buffered_if_needed {
+            () => ({
+                match state {
+                    Initial => {},
+                    SetIndex => {
+                        push_buffered!(Set);
+                    }
+                }
+            })
+        }
+
+
+        match c {
+            ','|' '|'\n' => push_buffered_if_needed!(),
+            's' => {
+                push_buffered_if_needed!();
+                state = SetIndex;
+            }
+            '0'..='9' => match state {
+                Initial => {
+                    return Err("Unexpected digit before");
+                },
+                SetIndex => {
+                    digit_buffer[digit_buffer_i] = c.try_into()
+                        .expect("should be in 0-9");
+                    digit_buffer_i += 1;
+                }
+            }
+            _ => {
+                if c < ' ' {
+                    return Err("got unexpected char less than ' '");
+                } else if c > '\u{7f}' {
+                    return Err("got unexpected char more than \\u{{7f}}");
+                } else {
+                    return Err("got unexpected char between ' ' and \\u{{7f}} inclusive");
+                }
+            }
+        }
+    }
+
+    Ok(output.into())
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -127,8 +220,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     }
 
-    type Flags = u16;
-
     // Labelled Lexeme
     #[derive(Default)]
     struct LL {
@@ -165,6 +256,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             State::AddFlags{ ref mut ll } => {
                 println!("Add flags to");
                 println!("{}", ll.lexeme);
+                println!("{:#b}", ll.flags);
                 println!("To change the flags pick a operation prefix:");
                 println!("s) Set bits. t) Toggle bits. u) Un-set bits.");
                 println!("... then enter it followed by a comma-separated");
@@ -219,7 +311,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         for command in commands.iter() {
                             use FlagsCommand::*;
                             match *command {
-                                
+                                Set(index) => {
+                                    let flag: Flags = 1 << (index as Flags);
+                                    ll.flags |= flag;
+                                }
                             }
                         }
                         State::AddFlags{ ll }
