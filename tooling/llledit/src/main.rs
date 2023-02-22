@@ -193,7 +193,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     impl std::fmt::Display for Lexeme {
         fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
             match std::str::from_utf8(&self.0) {
-                Ok(s) => write!(f, "{s}"),
+                Ok(s) => if f.alternate() {
+                    write!(f, "\"{s}\"")
+                } else {
+                    write!(f, "{s}")
+                },
                 Err(e) => write!(f, "{e}"),
             }
 
@@ -204,6 +208,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         type Error = ErrMsg;
 
         fn try_from(value: &str) -> Result<Self, Self::Error> {
+            let value = value.trim();
+
             if value.is_empty() {
                 Err("")
             } else if value.len() > usize::from(MAX_LEXEME_LENGTH) {
@@ -255,7 +261,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             }
             State::AddFlags{ ref mut ll } => {
                 println!("Add flags to");
-                println!("{}", ll.lexeme);
+                println!("{:#}", ll.lexeme);
                 println!("{:#b}", ll.flags);
                 println!("To change the flags pick a operation prefix:");
                 println!("s) Set bits. t) Toggle bits. u) Un-set bits.");
