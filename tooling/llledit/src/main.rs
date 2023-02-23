@@ -47,9 +47,9 @@ type FlagIndex = u8;
 #[derive(Clone, Copy, Debug)]
 enum FlagsCommand {
     Set(FlagIndex),
+    Toggle(FlagIndex),
+    Unset(FlagIndex),
 // TODO
-    //Toggle(FlagIndex),
-    //Unset(FlagIndex),
     //EditLexeme,
     //FinishedFlags,
 }
@@ -58,15 +58,13 @@ fn parse_flags_commands(input: &str) -> Result<Box<[FlagsCommand]>, ErrMsg> {
     use FlagsCommand::*;
 
     enum ParseState {
-        Initial,
         SetIndex,
-    // TODO
-        //ToggleIndex,
-        //UnsetIndex,
+        ToggleIndex,
+        UnsetIndex,
     }
     use ParseState::*;
 
-    let mut state = Initial;
+    let mut state = SetIndex;
 
     // Commands can be packed as tightly as two bytes: 's0'
     // But often they would take up more: 's10,11'
@@ -101,10 +99,15 @@ fn parse_flags_commands(input: &str) -> Result<Box<[FlagsCommand]>, ErrMsg> {
         macro_rules! push_buffered_if_needed {
             () => ({
                 match state {
-                    Initial => {},
                     SetIndex => {
                         push_buffered!(Set);
-                    }
+                    },
+                    ToggleIndex => {
+                        push_buffered!(Toggle);
+                    },
+                    UnsetIndex => {
+                        push_buffered!(Unset);
+                    },
                 }
             })
         }
@@ -115,16 +118,19 @@ fn parse_flags_commands(input: &str) -> Result<Box<[FlagsCommand]>, ErrMsg> {
             's' => {
                 push_buffered_if_needed!();
                 state = SetIndex;
-            }
-            '0'..='9' => match state {
-                Initial => {
-                    return Err("Unexpected digit before");
-                },
-                SetIndex => {
-                    digit_buffer[digit_buffer_i] = c.try_into()
-                        .expect("should be in 0-9");
-                    digit_buffer_i += 1;
-                }
+            },
+            't' => {
+                push_buffered_if_needed!();
+                state = ToggleIndex;
+            },
+            'u' => {
+                push_buffered_if_needed!();
+                state = UnsetIndex;
+            },
+            '0'..='9' => {
+                digit_buffer[digit_buffer_i] = c.try_into()
+                    .expect("should be in 0-9");
+                digit_buffer_i += 1;
             }
             _ => {
                 if c < ' ' {
@@ -320,6 +326,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 Set(index) => {
                                     let flag: Flags = 1 << (index as Flags);
                                     ll.flags |= flag;
+                                }
+                                Toggle(index) => {
+                                    let flag: Flags = 1 << (index as Flags);
+                                    ll.flags ^= flag;
+                                }
+                                Unset(index) => {
+                                    let flag: Flags = 1 << (index as Flags);
+                                    ll.flags &= !flag;
                                 }
                             }
                         }
