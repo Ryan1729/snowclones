@@ -49,12 +49,17 @@ enum FlagsCommand {
     Set(FlagIndex),
     Toggle(FlagIndex),
     Unset(FlagIndex),
-// TODO
-    //EditLexeme,
-    //FinishedFlags,
+    EditLexeme,
+    FinishedFlags,
 }
 
 fn parse_flags_commands(input: &str) -> Result<Box<[FlagsCommand]>, ErrMsg> {
+    // We'd rather set digit_buffer_i to 0 (inside push_buffered) when it isn't
+    // needed than miss setting it to 0 when we should.
+    // TODO? Can we scope this attribute tighter? Abve the assingment doesn't work
+    // at the moment.
+    #![allow(unused_assignments)]
+
     use FlagsCommand::*;
 
     enum ParseState {
@@ -132,6 +137,16 @@ fn parse_flags_commands(input: &str) -> Result<Box<[FlagsCommand]>, ErrMsg> {
                     .expect("should be in 0-9");
                 digit_buffer_i += 1;
             }
+            'e' => {
+                push_buffered_if_needed!();
+                output.push(FlagsCommand::EditLexeme);
+                break
+            },
+            'f' => {
+                push_buffered_if_needed!();
+                output.push(FlagsCommand::FinishedFlags);
+                break
+            },
             _ => {
                 if c < ' ' {
                     return Err("got unexpected char less than ' '");
@@ -145,6 +160,89 @@ fn parse_flags_commands(input: &str) -> Result<Box<[FlagsCommand]>, ErrMsg> {
     }
 
     Ok(output.into())
+}
+
+const V0_HEADER: [u8; 4] = [b'l', b'l', b'l', 0];
+const V0_MIN_LENGTH: u8 = 4;
+
+mod lexeme {
+    use super::*;
+
+    pub const MAX_LENGTH: u8 = 127 - V0_MIN_LENGTH;
+    pub const MAX_LENGTH_ERROR: ErrMsg = "Lexemes canot be more than 123 bytes long!";
+
+    pub struct Lexeme([u8; MAX_LENGTH as _]);
+
+    impl Default for Lexeme {
+        fn default() -> Self {
+            Self([0; MAX_LENGTH as _])
+        }
+    }
+
+    impl std::fmt::Display for Lexeme {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match std::str::from_utf8(&self.0) {
+                Ok(s) => if f.alternate() {
+                    write!(f, "\"{s}\"")
+                } else {
+                    write!(f, "{s}")
+                },
+                Err(e) => write!(f, "{e}"),
+            }
+
+        }
+    }
+
+    impl TryFrom<&str> for Lexeme {
+        type Error = ErrMsg;
+
+        fn try_from(value: &str) -> Result<Self, Self::Error> {
+            let value = value.trim();
+
+            if value.is_empty() {
+                Err("")
+            } else if value.len() > usize::from(MAX_LENGTH) {
+                Err(MAX_LENGTH_ERROR)
+            } else {
+                let mut lexeme = [0; MAX_LENGTH as _];
+
+                for (i, b) in value.as_bytes().iter().enumerate() {
+                    lexeme[i] = *b;
+                }
+
+                Ok(Lexeme(lexeme))
+            }
+        }
+    }
+
+    impl Lexeme {
+        pub fn len(&self) -> u8 {
+            self.as_str().len() as u8
+        }
+
+        pub fn bytes(&self) -> &[u8] {
+            self.as_str().as_bytes()
+        }
+
+        fn as_str(&self) -> &str {
+            // This module only exposes ways to create `Lexeme`s that ensure this
+            // cannot fail.
+            std::str::from_utf8(&self.0)
+                .expect("all lexemes should be valid UTF-8")
+        }
+    }
+}
+use lexeme::Lexeme;
+
+// Labelled Lexeme
+#[derive(Default)]
+struct LL {
+    lexeme: Lexeme,
+    flags: Flags
+}
+
+fn parse_lll(bytes: &[u8]) -> Result<Vec<LL>, ErrMsg> {
+    todo!()
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -171,73 +269,20 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     };
 
-    p.enable_alternate_screen();
-    p.clear();
-    p.move_home();
-
     let initial_len = file.metadata()?.len();
     // Round up to nearest 256 bytes, because we expect most of the time at least
     // one lexeme will be added.
     let capacity = (initial_len | 0xFF) + 1;
-    let mut lll = Vec::with_capacity(usize::try_from(capacity).unwrap_or_default());
-    file.read_to_end(&mut lll)?;
+    let mut bytes = Vec::with_capacity(usize::try_from(capacity).unwrap_or_default());
+    file.read_to_end(&mut bytes)?;
 
-    println!("{} bytes", lll.len());
+    let mut lll: Vec<LL> = parse_lll(&bytes)?;
 
-    const MAX_LEXEME_LENGTH: u8 = 127;
-    const MAX_LEXEME_LENGTH_ERROR: ErrMsg = "Lexemes canot be more than 127 bytes long!";
-    let mut input = String::with_capacity(usize::from(MAX_LEXEME_LENGTH));
+    p.enable_alternate_screen();
+    p.clear();
+    p.move_home();
 
-    struct Lexeme([u8; MAX_LEXEME_LENGTH as _]);
-
-    impl Default for Lexeme {
-        fn default() -> Self {
-            Self([0; MAX_LEXEME_LENGTH as _])
-        }
-    }
-
-    impl std::fmt::Display for Lexeme {
-        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-            match std::str::from_utf8(&self.0) {
-                Ok(s) => if f.alternate() {
-                    write!(f, "\"{s}\"")
-                } else {
-                    write!(f, "{s}")
-                },
-                Err(e) => write!(f, "{e}"),
-            }
-
-        }
-    }
-
-    impl TryFrom<&str> for Lexeme {
-        type Error = ErrMsg;
-
-        fn try_from(value: &str) -> Result<Self, Self::Error> {
-            let value = value.trim();
-
-            if value.is_empty() {
-                Err("")
-            } else if value.len() > usize::from(MAX_LEXEME_LENGTH) {
-                Err(MAX_LEXEME_LENGTH_ERROR)
-            } else {
-                let mut lexeme = [0; MAX_LEXEME_LENGTH as _];
-
-                for (i, b) in value.as_bytes().iter().enumerate() {
-                    lexeme[i] = *b;
-                }
-
-                Ok(Lexeme(lexeme))
-            }
-        }
-    }
-
-    // Labelled Lexeme
-    #[derive(Default)]
-    struct LL {
-        lexeme: Lexeme,
-        flags: Flags
-    }
+    let mut input = String::with_capacity(usize::from(lexeme::MAX_LENGTH));
 
     enum State {
         Menu,
@@ -250,6 +295,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let stdin = std::io::stdin();
     loop {
+        macro_rules! break_if_err {
+            ($res: expr) => {
+                if let Err(e) = $res {
+                    eprintln!("{e}");
+                    // Do the cleanup, instead of just exiting.
+                    break
+                }
+            }
+        }
+
         p.clear();
         p.move_home();
 
@@ -279,11 +334,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
 
         input.clear();
-        if let Err(e) = stdin.read_line(&mut input) {
-            eprintln!("{e}");
-            // Do the cleanup, instead of just exiting.
-            break
-        }
+        break_if_err!(stdin.read_line(&mut input));
 
         state = match state {
             State::Menu => {
@@ -320,6 +371,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             State::AddFlags{ mut ll } => {
                 match parse_flags_commands(&input) {
                     Ok(commands) => {
+                        enum StateSwitch {
+                            Stay,
+                            EditLexeme,
+                            Finished,
+                        }
+                        let mut switch = StateSwitch::Stay;
                         for command in commands.iter() {
                             use FlagsCommand::*;
                             match *command {
@@ -335,9 +392,56 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     let flag: Flags = 1 << (index as Flags);
                                     ll.flags &= !flag;
                                 }
+                                EditLexeme => {
+                                    switch = StateSwitch::EditLexeme;
+                                    break
+                                }
+                                FinishedFlags => {
+                                    switch = StateSwitch::Finished;
+                                    break
+                                }
                             }
                         }
-                        State::AddFlags{ ll }
+
+                        match switch {
+                            StateSwitch::Stay => {
+                                State::AddFlags{ ll }
+                            },
+                            StateSwitch::EditLexeme => {
+                                State::AddChars{ ll }
+                            },
+                            StateSwitch::Finished => {
+                                use std::io::Write;
+
+                                lll.push(ll);
+
+                                break_if_err!(file.set_len(0));
+
+                                break_if_err!(file.write(&V0_HEADER));
+                                for ll in &lll {
+                                    break_if_err!(
+                                        file.write(&[
+                                            V0_MIN_LENGTH + ll.lexeme.len() as u8
+                                        ])
+                                    );
+
+                                    break_if_err!(
+                                        file.write(&ll.flags.to_le_bytes())
+                                    );
+                                    break_if_err!(
+                                        file.write(&[0])
+                                    );
+
+                                    break_if_err!(
+                                        file.write(ll.lexeme.bytes())
+                                    );
+                                }
+
+                                break_if_err!(file.flush());
+
+                                State::Menu
+                            },
+                        }
                     },
                     Err(e) => {
                         err = e;
