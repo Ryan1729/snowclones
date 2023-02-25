@@ -40,7 +40,7 @@ use printer::Printer;
 
 type ErrMsg = &'static str;
 
-type Flags = u16;
+type Flags = u32;
 
 type FlagIndex = u8;
 
@@ -193,6 +193,18 @@ mod lexeme {
         }
     }
 
+    impl TryFrom<&[u8]> for Lexeme {
+        type Error = ErrMsg;
+
+        fn try_from(value: &[u8]) -> Result<Self, Self::Error> {
+            // Pass through str so we are sure that all `Lexeme`s are valid UTF-8
+            match std::str::from_utf8(value) {
+                Err(_) => Err("Potential lexeme was not valid UTF-8"),
+                Ok(s) => Self::try_from(s)
+            }
+        }
+    }
+
     impl TryFrom<&str> for Lexeme {
         type Error = ErrMsg;
 
@@ -229,6 +241,7 @@ mod lexeme {
             // cannot fail.
             std::str::from_utf8(&self.0)
                 .expect("all lexemes should be valid UTF-8")
+                .trim_end_matches('\0')
         }
     }
 }
@@ -242,7 +255,67 @@ struct LL {
 }
 
 fn parse_lll(bytes: &[u8]) -> Result<Vec<LL>, ErrMsg> {
-    todo!()
+    if bytes.len() < V0_HEADER.len() {
+        return Err("File was not .lll format: Too short.");
+    }
+    if bytes[0] != V0_HEADER[0]
+    || bytes[1] != V0_HEADER[1]
+    || bytes[2] != V0_HEADER[2] {
+        return Err("File was not .lll format: Header wrong");
+    }
+
+    if bytes[3] != 0 {
+        if bytes[3] == 1 {
+            return Err("File was an unsupported version of .lll format: 1");
+        } else if bytes[3] == 2 {
+            return Err("File was an unsupported version of .lll format: 2");
+        } else {
+            return Err("File was an unsupported version of .lll format: >2");
+        }
+    }
+
+    const BLOCK_HEADER_LENGTH: u8 = 4;
+
+    let mut output = Vec::with_capacity(bytes.len() / 16);
+
+    let mut i = V0_HEADER.len();
+    while i < bytes.len() {
+        let len = bytes[i] & 0x7F;
+        if len < BLOCK_HEADER_LENGTH {
+            return Err("Table seems corrupted: Block length was invalid.");
+        }
+
+        let block_end = i + usize::from(len);
+        if block_end > bytes.len() {
+            break
+        }
+
+        let fef = (bytes[i] & 0x80) == 0x80;
+
+        if fef {
+            // Skip because we don't know what the FEF does yet.
+            i = block_end;
+            continue
+        }
+
+        let lexeme = (&bytes[
+            i + usize::from(BLOCK_HEADER_LENGTH)..block_end
+        ]).try_into()?;
+
+        let flags = bytes[i + 1] as Flags
+            | (bytes[i + 2] as Flags) << 8
+            | (bytes[i + 3] as Flags) << 16
+            ;
+
+        output.push(LL {
+            lexeme,
+            flags
+        });
+
+        i = block_end;
+    }
+
+    Ok(output)
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -411,10 +484,13 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 State::AddChars{ ll }
                             },
                             StateSwitch::Finished => {
-                                use std::io::Write;
+                                use std::io::{Seek, SeekFrom, Write};
 
                                 lll.push(ll);
 
+                                break_if_err!(
+                                    file.seek(SeekFrom::Start(0))
+                                );
                                 break_if_err!(file.set_len(0));
 
                                 break_if_err!(file.write(&V0_HEADER));
@@ -426,11 +502,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                     );
 
                                     break_if_err!(
-                                        file.write(&ll.flags.to_le_bytes())
+                                        file.write(&(ll.flags.to_le_bytes())[0..3])
                                     );
-                                    break_if_err!(
-                                        file.write(&[0])
-                                    );
+
 
                                     break_if_err!(
                                         file.write(ll.lexeme.bytes())
