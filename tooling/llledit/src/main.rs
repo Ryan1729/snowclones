@@ -1,5 +1,13 @@
 use std::{io::Read, path::PathBuf};
 
+macro_rules! compile_time_assert {
+    ($assertion: expr) => {{
+        #[allow(unknown_lints, eq_op)]
+        // Based on the const_assert macro from static_assertions;
+        const _: [(); 0 - !{$assertion} as usize] = [];
+    }}
+}
+
 mod printer {
     #[derive(Default)]
     pub struct Printer {
@@ -400,7 +408,47 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("To change the flags pick a operation prefix:");
                 println!("s) Set bits. t) Toggle bits. u) Un-set bits.");
                 println!("... then enter it followed by a comma-separated");
-                println!("list of bit indexes and/or names.");
+                println!("list of bit indexes.");
+
+                const FLAG_NAMES: [&str; 6] = [
+                    "SINGULAR_NOUN",
+                    "PLURAL_NOUN",
+                    "RESERVED",
+                    "RESERVED",
+                    "INTRANSITIVE_VERB",
+                    "TRANSITIVE_VERB",
+                ];
+
+                // Used in compile-time assert.
+                #[allow(dead_code)]
+                const MAX_NAME_LEN: usize = {
+                    let mut max_len = 0;
+                    let mut i = 0;
+                    while i < FLAG_NAMES.len() {
+                        let len = FLAG_NAMES[i].len();
+                        if len > max_len {
+                            max_len = len;
+                        }
+                        i += 1;
+                    }
+                    max_len
+                };
+
+                let half_len = (FLAG_NAMES.len() + 1) / 2;
+
+                for i in 0..half_len {
+                    let first_name = FLAG_NAMES[i];
+                    let i2 = half_len + i;
+                    if let Some(second_name) = FLAG_NAMES.get(i2) {
+                        // assert format width is large enough
+                        compile_time_assert!(
+                            20 >= MAX_NAME_LEN
+                        );
+                        println!("{first_name:>20}:{i:2} {second_name:>20}:{i2:2}");
+                    } else {
+                        println!("{first_name:>20}:{i:2}");
+                    }
+                }
                 println!("e) Edit lexeme. f) Finished editing flags.");
                 println!("{err}");
             }

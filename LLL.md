@@ -61,15 +61,33 @@ first flags byte, and continues upward, going though the other bits of
 that byte, then from the most significant bit of the first flags byte to
 the least significant bit of the second flags byte and so on.
 
-#### SINGULAR_NOUN
+#### SINGULAR_NOUN (1 << 0)
 
-Inidcates that the lexeme is a singular noun.
+Indicates that the lexeme is a singular noun.
 Examples: Fork, Sheep
 
-#### PLURAL_NOUN
+#### PLURAL_NOUN (1 << 1)
 
-Inidcates that the lexeme is a plural noun.
+Indicates that the lexeme is a plural noun.
 Examples: Forks, Sheep
+
+#### RESERVED (1 << 2)
+
+Reserved for a future use, probably relating to nouns.
+
+#### RESERVED (1 << 3)
+
+Reserved for a future use, probably relating to nouns.
+
+#### INTRANSITIVE_VERB (1 << 4)
+
+Indicates that the lexeme is a verb that does not need a direct object.
+Examples: flow, understand
+
+#### TRANSITIVE_VERB (1 << 5)
+
+Indicates that the lexeme is a verb that can be used with a direct object.
+Examples: have, understand
 
 ### Lexeme
 
