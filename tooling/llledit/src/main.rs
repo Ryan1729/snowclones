@@ -410,13 +410,16 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("... then enter it followed by a comma-separated");
                 println!("list of bit indexes.");
 
-                const FLAG_NAMES: [&str; 6] = [
+                const FLAG_NAMES: [&str; 9] = [
                     "SINGULAR_NOUN",
                     "PLURAL_NOUN",
                     "RESERVED",
                     "RESERVED",
                     "INTRANSITIVE_VERB",
                     "TRANSITIVE_VERB",
+                    "RESERVED",
+                    "RESERVED",
+                    "THIRD_PERSON_SINGULAR_VERB",
                 ];
 
                 // Used in compile-time assert.
@@ -442,11 +445,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     if let Some(second_name) = FLAG_NAMES.get(i2) {
                         // assert format width is large enough
                         compile_time_assert!(
-                            20 >= MAX_NAME_LEN
+                            30 >= MAX_NAME_LEN
                         );
-                        println!("{first_name:>20}:{i:2} {second_name:>20}:{i2:2}");
+                        println!("{first_name:>30}:{i:2} {second_name:>30}:{i2:2}");
                     } else {
-                        println!("{first_name:>20}:{i:2}");
+                        println!("{first_name:>30}:{i:2}");
                     }
                 }
                 println!("e) Edit lexeme. f) Finished editing flags.");

@@ -89,6 +89,19 @@ Examples: flow, understand
 Indicates that the lexeme is a verb that can be used with a direct object.
 Examples: have, understand
 
+#### RESERVED (1 << 6)
+
+Reserved for a future use, probably relating to verbs.
+
+#### RESERVED (1 << 7)
+
+Reserved for a future use, probably relating to verbs.
+
+#### THIRD_PERSON_SINGULAR_VERB (1 << 8)
+
+Indicates that the lexeme is a verb in third person singular form.
+Examples: runs, tries
+
 ### Lexeme
 
 The lexeme is encoded in UTF-8, and starts after the last flags byte and
