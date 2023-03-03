@@ -1,0 +1,6 @@
+#!/bin/bash
+
+# Run this to update your repo local git config to make lll diffs pretty
+
+git config diff.lll.textconv "hexdump -e '80 \"%_p\" \"
+\"'"
