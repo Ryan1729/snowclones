@@ -15,6 +15,8 @@ padding:0 10px
         <option value="oh-my">Noun(s) and Noun(s) and Noun(s), oh my!</option>
         <option value="whatever-your">Whatever Verbs your Noun(s)</option>
         <option value="many-light-work">Many Nouns make light work</option>
+        <option value="considered-harmful">Noun(s) considered harmful</option>
+        <option value="you-may-not-need">You may not need Noun(s)</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -167,6 +169,16 @@ Whatever ${rollThirdPersonSingularSimplePresentVerb()} your ${rollNoun()}.
             case "many-light-work":
             output(`
 Many ${rollPluralNoun()} make light work.
+`);
+            break
+            case "considered-harmful":
+            output(`
+${capitalizeFirst(rollNoun())} considered harmful.
+`);
+            break
+            case "you-may-not-need":
+            output(`
+You may not need ${rollPluralNoun()}.
 `);
             break
             default:
