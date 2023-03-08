@@ -1,4 +1,4 @@
-use std::{io::Read, path::PathBuf};
+use std::{fs::File, io::{self, Read}, path::PathBuf};
 
 macro_rules! compile_time_assert {
     ($assertion: expr) => {{
@@ -179,6 +179,7 @@ mod lexeme {
     pub const MAX_LENGTH: u8 = 127 - V0_MIN_LENGTH;
     pub const MAX_LENGTH_ERROR: ErrMsg = "Lexemes canot be more than 123 bytes long!";
 
+    #[derive(Clone)]
     pub struct Lexeme([u8; MAX_LENGTH as _]);
 
     impl Default for Lexeme {
@@ -256,7 +257,7 @@ mod lexeme {
 use lexeme::Lexeme;
 
 // Labelled Lexeme
-#[derive(Default)]
+#[derive(Clone, Default)]
 struct LL {
     lexeme: Lexeme,
     flags: Flags
@@ -369,6 +370,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         Menu,
         AddChars{ ll: LL },
         AddFlags{ ll: LL },
+        SelectEditIndex{ index: Option<usize> },
+        EditChars{ ll: LL, index: usize },
+        EditFlags{ ll: LL, index: usize },
     }
 
     let mut state = State::Menu;
@@ -389,9 +393,37 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         p.clear();
         p.move_home();
 
+        const FLAG_NAMES: [&str; 9] = [
+            "SINGULAR_NOUN",
+            "PLURAL_NOUN",
+            "RESERVED",
+            "RESERVED",
+            "INTRANSITIVE_VERB",
+            "TRANSITIVE_VERB",
+            "RESERVED",
+            "RESERVED",
+            "THIRD_PERSON_SINGULAR_VERB",
+        ];
+
+        // Used in compile-time asserts.
+        #[allow(dead_code)]
+        const MAX_NAME_LEN: usize = {
+            let mut max_len = 0;
+            let mut i = 0;
+            while i < FLAG_NAMES.len() {
+                let len = FLAG_NAMES[i].len();
+                if len > max_len {
+                    max_len = len;
+                }
+                i += 1;
+            }
+            max_len
+        };
+
         match state {
             State::Menu => {
                 println!("a) Add a lexeme");
+                println!("e) Edit a lexeme");
                 println!("q then enter to quit");
                 println!("{err}");
             }
@@ -404,38 +436,74 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             State::AddFlags{ ref mut ll } => {
                 println!("Add flags to");
                 println!("{:#}", ll.lexeme);
-                println!("{:#b}", ll.flags);
+                println!(">{:#b}", ll.flags);
                 println!("To change the flags pick a operation prefix:");
                 println!("s) Set bits. t) Toggle bits. u) Un-set bits.");
                 println!("... then enter it followed by a comma-separated");
                 println!("list of bit indexes.");
 
-                const FLAG_NAMES: [&str; 9] = [
-                    "SINGULAR_NOUN",
-                    "PLURAL_NOUN",
-                    "RESERVED",
-                    "RESERVED",
-                    "INTRANSITIVE_VERB",
-                    "TRANSITIVE_VERB",
-                    "RESERVED",
-                    "RESERVED",
-                    "THIRD_PERSON_SINGULAR_VERB",
-                ];
+                let half_len = (FLAG_NAMES.len() + 1) / 2;
 
-                // Used in compile-time assert.
-                #[allow(dead_code)]
-                const MAX_NAME_LEN: usize = {
-                    let mut max_len = 0;
-                    let mut i = 0;
-                    while i < FLAG_NAMES.len() {
-                        let len = FLAG_NAMES[i].len();
-                        if len > max_len {
-                            max_len = len;
-                        }
-                        i += 1;
+                for i in 0..half_len {
+                    let first_name = FLAG_NAMES[i];
+                    let i2 = half_len + i;
+                    if let Some(second_name) = FLAG_NAMES.get(i2) {
+                        // assert format width is large enough
+                        compile_time_assert!(
+                            30 >= MAX_NAME_LEN
+                        );
+                        println!("{first_name:>30}:{i:2} {second_name:>30}:{i2:2}");
+                    } else {
+                        println!("{first_name:>30}:{i:2}");
                     }
-                    max_len
-                };
+                }
+                println!("e) Edit lexeme. f) Finished editing flags.");
+                println!("{err}");
+            }
+            State::SelectEditIndex{ ref mut index } => {
+                println!("Select a lexeme");
+                println!("Enter an index, or");
+                println!("q) go back to the menu");
+                match index.and_then(|i| lll.get(i).map(|ll| (i, ll))) {
+                    Some((i, ll)) => {
+                        println!("e) edit this lexeme");
+                        println!();
+                        println!("{err}");
+                        println!("@{}", i);
+                        // TODO print the surrounding lexemes in the lll
+                        println!("{:#}", ll.lexeme);
+                        println!("{:#b}", ll.flags);
+                    },
+                    None => {
+                        println!();
+                        println!("{err}");
+                        print!(">");
+                    }
+                }
+
+            }
+            State::EditChars{ ref mut ll, index } => {
+                println!("Edit a lexeme");
+                println!();
+                println!("{err}");
+                if let Some(prev) = lll.get(index) {
+                    println!("{:#}", prev.lexeme);
+                    println!();
+                }
+                print!(">{}", ll.lexeme);
+            }
+            State::EditFlags{ ref mut ll, index } => {
+                println!("Edit flags for");
+                println!("{:#}", ll.lexeme);
+                if let Some(prev) = lll.get(index) {
+                    println!("{:#b}", prev.flags);
+                    println!();
+                }
+                println!(">{:#b}", ll.flags);
+                println!("To change the flags pick a operation prefix:");
+                println!("s) Set bits. t) Toggle bits. u) Un-set bits.");
+                println!("... then enter it followed by a comma-separated");
+                println!("list of bit indexes.");
 
                 let half_len = (FLAG_NAMES.len() + 1) / 2;
 
@@ -468,6 +536,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         err = "";
                         State::AddChars{ ll: <_>::default() }
                     },
+                    Some('e') => {
+                        err = "";
+                        State::SelectEditIndex{ index: None }
+                    },
                     None => {
                         err = "Type a letter to select an option";
                         state
@@ -495,37 +567,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             State::AddFlags{ mut ll } => {
                 match parse_flags_commands(&input) {
                     Ok(commands) => {
-                        enum StateSwitch {
-                            Stay,
-                            EditLexeme,
-                            Finished,
-                        }
-                        let mut switch = StateSwitch::Stay;
-                        for command in commands.iter() {
-                            use FlagsCommand::*;
-                            match *command {
-                                Set(index) => {
-                                    let flag: Flags = 1 << (index as Flags);
-                                    ll.flags |= flag;
-                                }
-                                Toggle(index) => {
-                                    let flag: Flags = 1 << (index as Flags);
-                                    ll.flags ^= flag;
-                                }
-                                Unset(index) => {
-                                    let flag: Flags = 1 << (index as Flags);
-                                    ll.flags &= !flag;
-                                }
-                                EditLexeme => {
-                                    switch = StateSwitch::EditLexeme;
-                                    break
-                                }
-                                FinishedFlags => {
-                                    switch = StateSwitch::Finished;
-                                    break
-                                }
-                            }
-                        }
+                        let switch = handle_commands(&mut ll, &commands);
 
                         match switch {
                             StateSwitch::Stay => {
@@ -535,34 +577,12 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                                 State::AddChars{ ll }
                             },
                             StateSwitch::Finished => {
-                                use std::io::{Seek, SeekFrom, Write};
-
                                 lll.push(ll);
 
-                                break_if_err!(
-                                    file.seek(SeekFrom::Start(0))
-                                );
-                                break_if_err!(file.set_len(0));
-
-                                break_if_err!(file.write(&V0_HEADER));
-                                for ll in &lll {
-                                    break_if_err!(
-                                        file.write(&[
-                                            V0_MIN_LENGTH + ll.lexeme.len() as u8
-                                        ])
-                                    );
-
-                                    break_if_err!(
-                                        file.write(&(ll.flags.to_le_bytes())[0..3])
-                                    );
-
-
-                                    break_if_err!(
-                                        file.write(ll.lexeme.bytes())
-                                    );
-                                }
-
-                                break_if_err!(file.flush());
+                                break_if_err!(write_lll_to_disk(
+                                    &mut file,
+                                    &lll
+                                ));
 
                                 State::Menu
                             },
@@ -574,10 +594,153 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
             }
+            State::SelectEditIndex{ ref mut index } => {
+                match (*index, input.chars().next()) {
+                    (_, Some('q')) => {
+                        err = "";
+                        State::Menu
+                    },
+                    (Some(i), Some('e')) => {
+                        match lll.get(i) {
+                            Some(ll) => {
+                                err = "";
+                                State::EditChars{ ll: ll.clone(), index: i }
+                            }
+                            None => {
+                                err = "No lexeme at that index";
+                                State::SelectEditIndex{ index: Some(i) }
+                            }
+                        }
+                    },
+                    _ => {
+                        dbg!(input.as_str());
+                        // TODO? allow jumping to add a new lexeme from here?
+                        match usize::from_str_radix(input.as_str().trim(), 10) {
+                            Ok(i) => {
+                                *index = Some(i);
+                                err = "";
+                                State::SelectEditIndex{ index: *index }
+                            },
+                            Err(_) => {
+                                err = "Could not parse index";
+                                State::SelectEditIndex{ index: *index }
+                            }
+                        }
+                    }
+                }
+            }
+            State::EditChars{ mut ll, index } => {
+                // TODO? Implement actual piecewise editing,
+                // instead of just replacing?
+                match Lexeme::try_from(input.as_str()) {
+                    Ok(lexeme) => {
+                        ll.lexeme = lexeme;
+                        err = "";
+                        State::EditFlags{ ll, index }
+                    },
+                    Err(e) => {
+                        err = e;
+                        State::EditChars{ ll, index }
+                    }
+                }
+            }
+            State::EditFlags{ mut ll, index } => {
+                match parse_flags_commands(&input) {
+                    Ok(commands) => {
+                        let switch = handle_commands(&mut ll, &commands);
+
+                        match switch {
+                            StateSwitch::Stay => {
+                                State::EditFlags{ ll, index }
+                            },
+                            StateSwitch::EditLexeme => {
+                                State::EditChars{ ll, index }
+                            },
+                            StateSwitch::Finished => {
+                                if let Some(_) = lll.get(index) {
+                                    lll[index] = ll;
+                                } else {
+                                    // TODO? Break instead? check for a duplicate?
+                                    lll.push(ll);
+                                }
+
+                                break_if_err!(write_lll_to_disk(
+                                    &mut file,
+                                    &lll
+                                ));
+
+                                State::Menu
+                            },
+                        }
+                    },
+                    Err(e) => {
+                        err = e;
+                        State::EditFlags{ ll, index }
+                    }
+                }
+            }
         }
     }
 
     p.disable_alternate_screen();
+
+    Ok(())
+}
+
+enum StateSwitch {
+    Stay,
+    EditLexeme,
+    Finished,
+}
+
+fn handle_commands(ll: &mut LL, commands: &[FlagsCommand]) -> StateSwitch {
+    let mut switch = StateSwitch::Stay;
+    for command in commands.iter() {
+        use FlagsCommand::*;
+        match *command {
+            Set(index) => {
+                let flag: Flags = 1 << (index as Flags);
+                ll.flags |= flag;
+            }
+            Toggle(index) => {
+                let flag: Flags = 1 << (index as Flags);
+                ll.flags ^= flag;
+            }
+            Unset(index) => {
+                let flag: Flags = 1 << (index as Flags);
+                ll.flags &= !flag;
+            }
+            EditLexeme => {
+                switch = StateSwitch::EditLexeme;
+                break
+            }
+            FinishedFlags => {
+                switch = StateSwitch::Finished;
+                break
+            }
+        }
+    }
+    switch
+}
+
+fn write_lll_to_disk(file: &mut File, lll: &[LL]) -> io::Result<()> {
+    use std::io::{Seek, SeekFrom, Write};
+
+    file.seek(SeekFrom::Start(0))?;
+    file.set_len(0)?;
+
+    file.write(&V0_HEADER)?;
+    for ll in lll {
+        file.write(&[
+            V0_MIN_LENGTH + ll.lexeme.len() as u8
+        ])?;
+
+        file.write(&(ll.flags.to_le_bytes())[0..3])?;
+
+        file.write(ll.lexeme.bytes())?;
+    }
+
+    file.flush()?;
 
     Ok(())
 }
