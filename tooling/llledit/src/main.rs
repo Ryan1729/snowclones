@@ -393,7 +393,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         p.clear();
         p.move_home();
 
-        const FLAG_NAMES: [&str; 9] = [
+        const FLAG_NAMES: [&str; 11] = [
             "SINGULAR_NOUN",
             "PLURAL_NOUN",
             "RESERVED",
@@ -403,6 +403,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "RESERVED",
             "RESERVED",
             "THIRD_PERSON_SINGULAR_VERB",
+            "RESERVED",
+            "FIRST_PERSON_SINGULAR_VERB",
         ];
 
         // Used in compile-time asserts.
@@ -466,7 +468,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("q) go back to the menu");
                 match index.and_then(|i| lll.get(i).map(|ll| (i, ll))) {
                     Some((i, ll)) => {
-                        println!("e) edit this lexeme");
+                        println!("e) edit this lexeme f) edit this lexeme's flags");
                         println!();
                         println!("{err}");
                         println!("@{}", i);
@@ -605,6 +607,18 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                             Some(ll) => {
                                 err = "";
                                 State::EditChars{ ll: ll.clone(), index: i }
+                            }
+                            None => {
+                                err = "No lexeme at that index";
+                                State::SelectEditIndex{ index: Some(i) }
+                            }
+                        }
+                    },
+                    (Some(i), Some('f')) => {
+                        match lll.get(i) {
+                            Some(ll) => {
+                                err = "";
+                                State::EditFlags{ ll: ll.clone(), index: i }
                             }
                             None => {
                                 err = "No lexeme at that index";

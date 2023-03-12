@@ -102,6 +102,15 @@ Reserved for a future use, probably relating to verbs.
 Indicates that the lexeme is a verb in third person singular form.
 Examples: runs, tries
 
+#### RESERVED (1 << 9)
+
+Reserved for a future use, probably relating to verbs.
+
+#### FIRST_PERSON_SINGULAR_VERB (1 << 10)
+
+Indicates that the lexeme is a verb in first person singular form.
+Examples: run, try
+
 ### Lexeme
 
 The lexeme is encoded in UTF-8, and starts after the last flags byte and

@@ -17,6 +17,7 @@ padding:0 10px
         <option value="many-light-work">Many Nouns make light work</option>
         <option value="considered-harmful">Noun(s) considered harmful</option>
         <option value="you-may-not-need">You may not need Noun(s)</option>
+        <option value="will-for">Will Verb for Noun(s)</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -62,6 +63,8 @@ const setup = (table) => {
     //const  = 1 << 6;
     //const  = 1 << 7;
     const THIRD_PERSON_SINGULAR_VERB = 1 << 8;
+    //const  = 1 << 9;
+    const FIRST_PERSON_SINGULAR_VERB = 1 << 10;
 
     const decoder = new TextDecoder('utf8')
 
@@ -70,6 +73,7 @@ const setup = (table) => {
     const intransitiveVerbs = [];
     const transitiveVerbs = [];
     const thirdPersonSingularSimplePresentVerbs = [];
+    const firstPersonSingularSimplePresentVerbs = [];
 
     let i = MAGIC_LENGTH;
     while (i < table.length) {
@@ -124,6 +128,10 @@ const setup = (table) => {
         if (flags2 & THIRD_PERSON_SINGULAR_VERB) {
             thirdPersonSingularSimplePresentVerbs.push(lexeme)
         }
+        
+        if (flags2 & FIRST_PERSON_SINGULAR_VERB) {
+            firstPersonSingularSimplePresentVerbs.push(lexeme)
+        }
 
         // Skip reading last two flag bytes for now
 
@@ -147,6 +155,8 @@ const setup = (table) => {
 
     const rollNoun = () => rollFrom(nouns);
     const rollPluralNoun = () => rollFrom(pluralNouns);
+    const rollIntransitiveVerb = () => rollFrom(intransitiveVerbs);
+    const rollFirstPersonSingularSimplePresentVerb = () => rollFrom(firstPersonSingularSimplePresentVerbs);
     const rollThirdPersonSingularSimplePresentVerb = () => rollFrom(thirdPersonSingularSimplePresentVerbs);
 
     const capitalizeFirst = (s) => (
@@ -167,18 +177,23 @@ Whatever ${rollThirdPersonSingularSimplePresentVerb()} your ${rollNoun()}.
 `);
             break
             case "many-light-work":
-            output(`
+                output(`
 Many ${rollPluralNoun()} make light work.
 `);
             break
             case "considered-harmful":
-            output(`
+                output(`
 ${capitalizeFirst(rollNoun())} considered harmful.
 `);
             break
             case "you-may-not-need":
-            output(`
+                output(`
 You may not need ${rollPluralNoun()}.
+`);
+            break
+            case "will-for":
+                output(`
+Will ${rollFirstPersonSingularSimplePresentVerb()} for ${rollNoun()}.
 `);
             break
             default:
