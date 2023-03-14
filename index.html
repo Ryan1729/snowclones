@@ -18,6 +18,8 @@ padding:0 10px
         <option value="considered-harmful">Noun(s) considered harmful</option>
         <option value="you-may-not-need">You may not need Noun(s)</option>
         <option value="will-for">Will Verb for Noun(s)</option>
+        <option value="i's-the-that">I's the Noun that Verbs the Noun. And I's the Noun that Verbs her</option>
+        
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -68,12 +70,13 @@ const setup = (table) => {
 
     const decoder = new TextDecoder('utf8')
 
-    const singluarNouns = [];
+    const singularNouns = [];
     const pluralNouns = [];
     const intransitiveVerbs = [];
     const transitiveVerbs = [];
     const thirdPersonSingularSimplePresentVerbs = [];
     const firstPersonSingularSimplePresentVerbs = [];
+    const transitiveThirdPersonSingularSimplePresentVerb = [];
 
     let i = MAGIC_LENGTH;
     while (i < table.length) {
@@ -107,7 +110,7 @@ const setup = (table) => {
         const flags1 = table[i + 1];
 
         if (flags1 & SINGULAR_NOUN) {
-            singluarNouns.push(lexeme)
+            singularNouns.push(lexeme)
         }
 
         if (flags1 & PLURAL_NOUN) {
@@ -133,12 +136,17 @@ const setup = (table) => {
             firstPersonSingularSimplePresentVerbs.push(lexeme)
         }
 
-        // Skip reading last two flag bytes for now
+        if (
+            (flags1 & TRANSITIVE_VERB)
+            && (flags2 & THIRD_PERSON_SINGULAR_VERB)
+        ) {
+            transitiveThirdPersonSingularSimplePresentVerb.push(lexeme)
+        }
 
         i = blockEnd
     }
 
-    const nouns = singluarNouns.concat(pluralNouns)
+    const nouns = singularNouns.concat(pluralNouns)
 
     if (nouns.length <= 0) {
         output("Table contained no nouns");
@@ -154,10 +162,13 @@ const setup = (table) => {
     };
 
     const rollNoun = () => rollFrom(nouns);
+    const rollSingularNoun = () => rollFrom(singularNouns);
     const rollPluralNoun = () => rollFrom(pluralNouns);
+    // TODO find a snowclone that calls for these
     const rollIntransitiveVerb = () => rollFrom(intransitiveVerbs);
     const rollFirstPersonSingularSimplePresentVerb = () => rollFrom(firstPersonSingularSimplePresentVerbs);
     const rollThirdPersonSingularSimplePresentVerb = () => rollFrom(thirdPersonSingularSimplePresentVerbs);
+    const rollTransitiveThirdPersonSingularSimplePresentVerb = () => rollFrom(transitiveThirdPersonSingularSimplePresentVerb);
 
     const capitalizeFirst = (s) => (
         s.charAt(0).toUpperCase() + s.slice(1)
@@ -194,6 +205,11 @@ You may not need ${rollPluralNoun()}.
             case "will-for":
                 output(`
 Will ${rollFirstPersonSingularSimplePresentVerb()} for ${rollNoun()}.
+`);
+            case "i's-the-that":
+                output(`
+I's the ${rollSingularNoun()} that ${rollTransitiveThirdPersonSingularSimplePresentVerb()} the ${rollSingularNoun()}.
+And I's the ${rollSingularNoun()} that ${rollTransitiveThirdPersonSingularSimplePresentVerb()} her.
 `);
             break
             default:
