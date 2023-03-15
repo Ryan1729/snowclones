@@ -19,6 +19,7 @@ padding:0 10px
         <option value="you-may-not-need">You may not need Noun(s)</option>
         <option value="will-for">Will Verb for Noun(s)</option>
         <option value="i's-the-that">I's the Noun that Verbs the Noun. And I's the Noun that Verbs her</option>
+        <option value="repeat">Verb. Verb. Repeat</option>
         
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
@@ -76,6 +77,7 @@ const setup = (table) => {
     const transitiveVerbs = [];
     const thirdPersonSingularSimplePresentVerbs = [];
     const firstPersonSingularSimplePresentVerbs = [];
+    const intransitivefirstPersonSingularSimplePresentVerbs = [];
     const transitiveThirdPersonSingularSimplePresentVerb = [];
 
     let i = MAGIC_LENGTH;
@@ -137,6 +139,13 @@ const setup = (table) => {
         }
 
         if (
+            (flags1 & INTRANSITIVE_VERB)
+            && (flags2 & FIRST_PERSON_SINGULAR_VERB)
+        ) {
+            intransitivefirstPersonSingularSimplePresentVerbs.push(lexeme)
+        }
+
+        if (
             (flags1 & TRANSITIVE_VERB)
             && (flags2 & THIRD_PERSON_SINGULAR_VERB)
         ) {
@@ -164,8 +173,7 @@ const setup = (table) => {
     const rollNoun = () => rollFrom(nouns);
     const rollSingularNoun = () => rollFrom(singularNouns);
     const rollPluralNoun = () => rollFrom(pluralNouns);
-    // TODO find a snowclone that calls for these
-    const rollIntransitiveVerb = () => rollFrom(intransitiveVerbs);
+    const rollItransitivefirstPersonSingularSimplePresentVerb = () => rollFrom(intransitivefirstPersonSingularSimplePresentVerbs);
     const rollFirstPersonSingularSimplePresentVerb = () => rollFrom(firstPersonSingularSimplePresentVerbs);
     const rollThirdPersonSingularSimplePresentVerb = () => rollFrom(thirdPersonSingularSimplePresentVerbs);
     const rollTransitiveThirdPersonSingularSimplePresentVerb = () => rollFrom(transitiveThirdPersonSingularSimplePresentVerb);
@@ -210,6 +218,11 @@ Will ${rollFirstPersonSingularSimplePresentVerb()} for ${rollNoun()}.
                 output(`
 I's the ${rollSingularNoun()} that ${rollTransitiveThirdPersonSingularSimplePresentVerb()} the ${rollSingularNoun()}.
 And I's the ${rollSingularNoun()} that ${rollTransitiveThirdPersonSingularSimplePresentVerb()} her.
+`);
+            break
+            case "repeat":
+                output(`
+${capitalizeFirst(rollItransitivefirstPersonSingularSimplePresentVerb())}. ${capitalizeFirst(rollItransitivefirstPersonSingularSimplePresentVerb())}. Repeat.
 `);
             break
             default:
