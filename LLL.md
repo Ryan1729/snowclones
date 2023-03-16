@@ -71,9 +71,10 @@ Examples: Fork, Sheep
 Indicates that the lexeme is a plural noun.
 Examples: Forks, Sheep
 
-#### RESERVED (1 << 2)
+#### MASS_NOUN (1 << 2)
 
-Reserved for a future use, probably relating to nouns.
+Indicates that the lexeme is a mass noun.
+Examples: milk, cabbage
 
 #### RESERVED (1 << 3)
 

@@ -396,7 +396,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         const FLAG_NAMES: [&str; 11] = [
             "SINGULAR_NOUN",
             "PLURAL_NOUN",
-            "RESERVED",
+            "MASS_NOUN",
             "RESERVED",
             "INTRANSITIVE_VERB",
             "TRANSITIVE_VERB",
