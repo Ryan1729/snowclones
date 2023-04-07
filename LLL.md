@@ -112,6 +112,38 @@ Reserved for a future use, probably relating to verbs.
 Indicates that the lexeme is a verb in first person singular form.
 Examples: run, try
 
+#### RESERVED (1 << 11)
+
+Reserved for a future use.
+
+#### RESERVED (1 << 12)
+
+Reserved for a future use.
+
+#### RESERVED (1 << 13)
+
+Reserved for a future use.
+
+#### RESERVED (1 << 14)
+
+Reserved for a future use.
+
+#### RESERVED (1 << 15)
+
+Reserved for a future use.
+
+#### RESERVED (1 << 16, 1 << 17, 1 << 18, 1 << 19)
+
+Reserved for a future use where these four bits will be used, not as
+flags but as a 4 bit number indicating which of some exclusive
+catagories including, but not limited to, different kinds of adjectives.
+
+As of this writing the exact categories are to be determined. However,
+if all the values of these 4 bits are 0 then that indicates the word
+is not one of the given categories.
+
+
+
 ### Lexeme
 
 The lexeme is encoded in UTF-8, and starts after the last flags byte and
