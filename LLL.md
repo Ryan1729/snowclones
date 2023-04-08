@@ -132,17 +132,110 @@ Reserved for a future use.
 
 Reserved for a future use.
 
-#### RESERVED (1 << 16, 1 << 17, 1 << 18, 1 << 19)
+#### ADJECTIVE_ORDER_BLOCK (1 << 16, 1 << 17, 1 << 18, 1 << 19)
 
-Reserved for a future use where these four bits will be used, not as
-flags but as a 4 bit number indicating which of some exclusive
-catagories including, but not limited to, different kinds of adjectives.
+These four bits are used, not as flags but as a 4 bit number indicating
+which of some exclusive catagories the lexeme belongs to. These values
+are denoted below with decimal numbers from 0 to 15 inclusive. It is
+expected that many users of these 4 bits will mask off the other bits,
+and index or shift as necessary to create a value directly corresponding
+to the given numbers.
 
-As of this writing the exact categories are to be determined. However,
-if all the values of these 4 bits are 0 then that indicates the word
-is not one of the given categories.
+The numeric value of these categories indicates a relative ordering of
+how adjectives are used in English: Adjectives in categories of lower
+values are expected to occur before those in higher ones within
+adjectival phrases. For example one may say of a cow that is both big
+(category 6), and brown (category 10) that it is "a big brown cow". To
+say it is "a brown big cow" sounds strange/incorrect to native English
+speakers.
 
+It should be noted that it is possible written rules, like these ones
+about adjctive order, to actually be born out in reality at the time of
+their creation. Also, languages can and do change over time. So, it is
+possible that this ordering may be incorrect.
 
+We collectively refer to these categories as the adjective order block
+categories, even though some (currently reserved) categories may be
+assigned to non-categories.
+
+##### ADJECTIVE_ORDER_BLOCK_NONE (0)
+
+The lexeme is not a member of any of the adjective order categories
+described in this version of this document.
+
+We reserve the ability to add new categories to any remaining reserved
+category sections, including categories indicating non-adjectives, so
+this value cannot be relied on to indicate the lexeme is not an
+adjective.
+
+##### RESERVED (1)
+
+Reserved for a future use.
+
+##### RESERVED (2)
+
+Reserved for a future use.
+
+##### RESERVED (3)
+
+Reserved for a future use.
+
+##### ADJECTIVE_ORDER_BLOCK_QUANTITY (4)
+
+The lexeme is a quantity adjective.
+Examples: one, three, some
+
+##### ADJECTIVE_ORDER_BLOCK_OBSERVATION (5)
+
+The lexeme is an opinion/observation adjective.
+Examples: good, bad, clever
+
+##### ADJECTIVE_ORDER_BLOCK_SIZE (6)
+
+The lexeme is a size adjective.
+Examples: large, medium-sized, small
+
+##### ADJECTIVE_ORDER_BLOCK_PHYSICAL (7)
+
+The lexeme is a physical quality adjective.
+Examples: soft, lumpy, cluttered
+
+##### ADJECTIVE_ORDER_BLOCK_SHAPE (8)
+
+The lexeme is a shape adjective.
+Examples: square, spherical, helical
+
+##### ADJECTIVE_ORDER_BLOCK_AGE (9)
+
+The lexeme is a age adjective.
+Examples: young, old, new
+
+##### ADJECTIVE_ORDER_BLOCK_COLOUR (10)
+
+The lexeme is a colour adjective.
+Examples: red, green, blue
+
+##### ADJECTIVE_ORDER_BLOCK_ORIGIN (11)
+
+The lexeme is a colour adjective.
+Examples: Terran, Martian, Venusian
+
+##### ADJECTIVE_ORDER_BLOCK_MATERIAL (12)
+
+The lexeme is a material adjective.
+Examples: metal, plastic, copper
+
+##### RESERVED (13)
+
+Reserved for a future use.
+
+##### RESERVED (14)
+
+Reserved for a future use.
+
+##### RESERVED (15)
+
+Reserved for a future use.
 
 ### Lexeme
 
