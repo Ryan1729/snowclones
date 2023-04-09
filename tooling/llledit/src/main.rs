@@ -51,12 +51,14 @@ type ErrMsg = &'static str;
 type Flags = u32;
 
 type FlagIndex = u8;
+type AdjectiveOrderCategory = u8;
 
 #[derive(Clone, Copy, Debug)]
 enum FlagsCommand {
     Set(FlagIndex),
     Toggle(FlagIndex),
     Unset(FlagIndex),
+    SetAdjectiveOrder(AdjectiveOrderCategory),
     EditLexeme,
     FinishedFlags,
 }
@@ -74,6 +76,7 @@ fn parse_flags_commands(input: &str) -> Result<Box<[FlagsCommand]>, ErrMsg> {
         SetIndex,
         ToggleIndex,
         UnsetIndex,
+        SetAdjectiveOrderCategory,
     }
     use ParseState::*;
 
@@ -121,6 +124,9 @@ fn parse_flags_commands(input: &str) -> Result<Box<[FlagsCommand]>, ErrMsg> {
                     UnsetIndex => {
                         push_buffered!(Unset);
                     },
+                    SetAdjectiveOrderCategory => {
+                        push_buffered!(SetAdjectiveOrder);
+                    }
                 }
             })
         }
@@ -144,7 +150,11 @@ fn parse_flags_commands(input: &str) -> Result<Box<[FlagsCommand]>, ErrMsg> {
                 digit_buffer[digit_buffer_i] = c.try_into()
                     .expect("should be in 0-9");
                 digit_buffer_i += 1;
-            }
+            },
+            'a' => {
+                push_buffered_if_needed!();
+                state = SetAdjectiveOrderCategory;
+            },
             'e' => {
                 push_buffered_if_needed!();
                 output.push(FlagsCommand::EditLexeme);
@@ -393,7 +403,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         p.clear();
         p.move_home();
 
-        const FLAG_NAMES: [&str; 11] = [
+        const FLAG_NAMES: [&str; 16] = [
             "SINGULAR_NOUN",
             "PLURAL_NOUN",
             "MASS_NOUN",
@@ -405,6 +415,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "THIRD_PERSON_SINGULAR_VERB",
             "RESERVED",
             "FIRST_PERSON_SINGULAR_VERB",
+            "RESERVED",
+            "RESERVED",
+            "RESERVED",
+            "RESERVED",
+            "RESERVED",
         ];
 
         // Used in compile-time asserts.
@@ -443,6 +458,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("s) Set bits. t) Toggle bits. u) Un-set bits.");
                 println!("... then enter it followed by a comma-separated");
                 println!("list of bit indexes.");
+                println!("To change a block value enter a block prefix:");
+                println!("a) adjective order.");
+                println!("... then enter it followed by the desired value.");
 
                 let half_len = (FLAG_NAMES.len() + 1) / 2;
 
@@ -506,6 +524,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("s) Set bits. t) Toggle bits. u) Un-set bits.");
                 println!("... then enter it followed by a comma-separated");
                 println!("list of bit indexes.");
+                println!("To change a block value enter a block prefix:");
+                println!("a) adjective order.");
+                println!("... then enter it followed by the desired value.");
 
                 let half_len = (FLAG_NAMES.len() + 1) / 2;
 
@@ -723,6 +744,11 @@ fn handle_commands(ll: &mut LL, commands: &[FlagsCommand]) -> StateSwitch {
             Unset(index) => {
                 let flag: Flags = 1 << (index as Flags);
                 ll.flags &= !flag;
+            }
+            SetAdjectiveOrder(category) => {
+                const ADJECTIVE_ORDER_SHIFT: Flags = 16;
+                ll.flags &= !(0b1111 << ADJECTIVE_ORDER_SHIFT);
+                ll.flags |= (category as Flags) << ADJECTIVE_ORDER_SHIFT;
             }
             EditLexeme => {
                 switch = StateSwitch::EditLexeme;
