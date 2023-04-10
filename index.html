@@ -21,6 +21,7 @@ padding:0 10px
         <option value="i's-the-that">I's the Noun that Verbs the Noun. And I's the Noun that Verbs her</option>
         <option value="repeat">Verb. Verb. Repeat</option>
         <option value="why-buy-when-is-free">Why buy the Noun when the Noun is free?</option>
+        <option value="let-lie">Let Adjective Nouns lie</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -68,6 +69,23 @@ const setup = (table) => {
     const THIRD_PERSON_SINGULAR_VERB = 1 << 8;
     //const  = 1 << 9;
     const FIRST_PERSON_SINGULAR_VERB = 1 << 10;
+    //const  = 1 << 11;
+    //const  = 1 << 12;
+    //const  = 1 << 13;
+    //const  = 1 << 14;
+    //const  = 1 << 15;
+
+    const ADJECTIVE_ORDER_BLOCK_QUANTITY = 4
+    const ADJECTIVE_ORDER_BLOCK_OBSERVATION = 5
+    const ADJECTIVE_ORDER_BLOCK_SIZE = 6
+    const ADJECTIVE_ORDER_BLOCK_PHYSICAL = 7
+    const ADJECTIVE_ORDER_BLOCK_SHAPE = 8
+    const ADJECTIVE_ORDER_BLOCK_AGE = 9
+    const ADJECTIVE_ORDER_BLOCK_COLOUR = 10
+    const ADJECTIVE_ORDER_BLOCK_ORIGIN = 11
+    const ADJECTIVE_ORDER_BLOCK_MATERIAL = 12
+
+    const ADJECTIVE_ORDER_BLOCK_MASK = 0b1111
 
     const decoder = new TextDecoder('utf8')
 
@@ -80,6 +98,7 @@ const setup = (table) => {
     const firstPersonSingularSimplePresentVerbs = [];
     const intransitivefirstPersonSingularSimplePresentVerbs = [];
     const transitiveThirdPersonSingularSimplePresentVerb = [];
+    const adjectives = [];
 
     let i = MAGIC_LENGTH;
     while (i < table.length) {
@@ -119,7 +138,7 @@ const setup = (table) => {
         if (flags1 & PLURAL_NOUN) {
             pluralNouns.push(lexeme)
         }
-        
+
         if (flags1 & MASS_NOUN) {
             massNouns.push(lexeme)
         }
@@ -138,7 +157,7 @@ const setup = (table) => {
         if (flags2 & THIRD_PERSON_SINGULAR_VERB) {
             thirdPersonSingularSimplePresentVerbs.push(lexeme)
         }
-        
+
         if (flags2 & FIRST_PERSON_SINGULAR_VERB) {
             firstPersonSingularSimplePresentVerbs.push(lexeme)
         }
@@ -157,11 +176,22 @@ const setup = (table) => {
             transitiveThirdPersonSingularSimplePresentVerb.push(lexeme)
         }
 
+        // from the third flag byte, left unshifted to align with those constants
+        const adjectiveOrderBlock = table[i + 3] & ADJECTIVE_ORDER_BLOCK_MASK;
+
+        if (
+            adjectiveOrderBlock >= ADJECTIVE_ORDER_BLOCK_QUANTITY
+            && adjectiveOrderBlock <= ADJECTIVE_ORDER_BLOCK_MATERIAL
+        ) {
+            adjectives.push(lexeme)
+        }
+
         i = blockEnd
     }
 
     const nouns = singularNouns.concat(pluralNouns).concat(massNouns);
     const singularOrMassNouns = singularNouns.concat(massNouns);
+    const pluralOrMassNouns = pluralNouns.concat(massNouns);
 
     if (nouns.length <= 0) {
         output("Table contained no nouns");
@@ -180,10 +210,12 @@ const setup = (table) => {
     const rollSingularNoun = () => rollFrom(singularNouns);
     const rollPluralNoun = () => rollFrom(pluralNouns);
     const rollSingularOrMassNoun = () => rollFrom(singularOrMassNouns);
+    const rollPluralOrMassNoun = () => rollFrom(pluralOrMassNouns);
     const rollIntransitivefirstPersonSingularSimplePresentVerb = () => rollFrom(intransitivefirstPersonSingularSimplePresentVerbs);
     const rollFirstPersonSingularSimplePresentVerb = () => rollFrom(firstPersonSingularSimplePresentVerbs);
     const rollThirdPersonSingularSimplePresentVerb = () => rollFrom(thirdPersonSingularSimplePresentVerbs);
     const rollTransitiveThirdPersonSingularSimplePresentVerb = () => rollFrom(transitiveThirdPersonSingularSimplePresentVerb);
+    const rollAdjective = () => rollFrom(adjectives);
 
     const capitalizeFirst = (s) => (
         s.charAt(0).toUpperCase() + s.slice(1)
@@ -236,6 +268,11 @@ ${capitalizeFirst(rollIntransitivefirstPersonSingularSimplePresentVerb())}. ${ca
             case "why-buy-when-is-free":
                 output(`
 Why buy the ${rollNoun()} when the ${rollSingularOrMassNoun()} is free?
+`);
+            break
+            case "let-lie":
+            output(`
+Let ${rollAdjective()} ${rollPluralOrMassNoun()} lie.
 `);
             break
             default:
