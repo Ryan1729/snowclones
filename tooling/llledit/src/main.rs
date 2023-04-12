@@ -424,11 +424,45 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         // Used in compile-time asserts.
         #[allow(dead_code)]
-        const MAX_NAME_LEN: usize = {
+        const MAX_FLAG_NAME_LEN: usize = {
             let mut max_len = 0;
             let mut i = 0;
             while i < FLAG_NAMES.len() {
                 let len = FLAG_NAMES[i].len();
+                if len > max_len {
+                    max_len = len;
+                }
+                i += 1;
+            }
+            max_len
+        };
+
+        const ADJECTIVE_ORDER_BLOCK_NAMES: [&str; 16] = [
+            "NONE",
+            "RESERVED",
+            "RESERVED",
+            "RESERVED",
+            "QUANTITY",
+            "OBSERVATION",
+            "SIZE",
+            "PHYSICAL",
+            "SHAPE",
+            "AGE",
+            "COLOUR",
+            "ORIGIN",
+            "MATERIAL",
+            "RESERVED",
+            "RESERVED",
+            "RESERVED",
+        ];
+
+        // Used in compile-time asserts.
+        #[allow(dead_code)]
+        const MAX_ADJECTIVE_ORDER_BLOCK_NAME_LEN: usize = {
+            let mut max_len = 0;
+            let mut i = 0;
+            while i < ADJECTIVE_ORDER_BLOCK_NAMES.len() {
+                let len = ADJECTIVE_ORDER_BLOCK_NAMES[i].len();
                 if len > max_len {
                     max_len = len;
                 }
@@ -461,20 +495,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("To change a block value enter a block prefix:");
                 println!("a) adjective order.");
                 println!("... then enter it followed by the desired value.");
+                println!("");
+                println!("Flags:");
+                {
+                    let half_len = (FLAG_NAMES.len() + 1) / 2;
 
-                let half_len = (FLAG_NAMES.len() + 1) / 2;
+                    for i in 0..half_len {
+                        let first_name = FLAG_NAMES[i];
+                        let i2 = half_len + i;
+                        if let Some(second_name) = FLAG_NAMES.get(i2) {
+                            // assert format width is large enough
+                            compile_time_assert!(
+                                30 >= MAX_FLAG_NAME_LEN
+                            );
+                            println!("{first_name:>30}:{i:2} {second_name:>30}:{i2:2}");
+                        } else {
+                            println!("{first_name:>30}:{i:2}");
+                        }
+                    }
+                }
+                println!("Adjective Order Block:");
+                {
+                    let half_len = (ADJECTIVE_ORDER_BLOCK_NAMES.len() + 1) / 2;
 
-                for i in 0..half_len {
-                    let first_name = FLAG_NAMES[i];
-                    let i2 = half_len + i;
-                    if let Some(second_name) = FLAG_NAMES.get(i2) {
-                        // assert format width is large enough
-                        compile_time_assert!(
-                            30 >= MAX_NAME_LEN
-                        );
-                        println!("{first_name:>30}:{i:2} {second_name:>30}:{i2:2}");
-                    } else {
-                        println!("{first_name:>30}:{i:2}");
+                    for i in 0..half_len {
+                        let first_name = ADJECTIVE_ORDER_BLOCK_NAMES[i];
+                        let i2 = half_len + i;
+                        if let Some(second_name) = ADJECTIVE_ORDER_BLOCK_NAMES.get(i2) {
+                            // assert format width is large enough
+                            compile_time_assert!(
+                                30 >= MAX_ADJECTIVE_ORDER_BLOCK_NAME_LEN
+                            );
+                            println!("{first_name:>30}:{i:2} {second_name:>30}:{i2:2}");
+                        } else {
+                            println!("{first_name:>30}:{i:2}");
+                        }
                     }
                 }
                 println!("e) Edit lexeme. f) Finished editing flags.");
@@ -527,20 +582,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                 println!("To change a block value enter a block prefix:");
                 println!("a) adjective order.");
                 println!("... then enter it followed by the desired value.");
+                println!("");
+                println!("Flags:");
+                {
+                    let half_len = (FLAG_NAMES.len() + 1) / 2;
 
-                let half_len = (FLAG_NAMES.len() + 1) / 2;
+                    for i in 0..half_len {
+                        let first_name = FLAG_NAMES[i];
+                        let i2 = half_len + i;
+                        if let Some(second_name) = FLAG_NAMES.get(i2) {
+                            // assert format width is large enough
+                            compile_time_assert!(
+                                30 >= MAX_FLAG_NAME_LEN
+                            );
+                            println!("{first_name:>30}:{i:2} {second_name:>30}:{i2:2}");
+                        } else {
+                            println!("{first_name:>30}:{i:2}");
+                        }
+                    }
+                }
+                println!("Adjective Order Block:");
+                {
+                    let half_len = (ADJECTIVE_ORDER_BLOCK_NAMES.len() + 1) / 2;
 
-                for i in 0..half_len {
-                    let first_name = FLAG_NAMES[i];
-                    let i2 = half_len + i;
-                    if let Some(second_name) = FLAG_NAMES.get(i2) {
-                        // assert format width is large enough
-                        compile_time_assert!(
-                            30 >= MAX_NAME_LEN
-                        );
-                        println!("{first_name:>30}:{i:2} {second_name:>30}:{i2:2}");
-                    } else {
-                        println!("{first_name:>30}:{i:2}");
+                    for i in 0..half_len {
+                        let first_name = ADJECTIVE_ORDER_BLOCK_NAMES[i];
+                        let i2 = half_len + i;
+                        if let Some(second_name) = ADJECTIVE_ORDER_BLOCK_NAMES.get(i2) {
+                            // assert format width is large enough
+                            compile_time_assert!(
+                                30 >= MAX_ADJECTIVE_ORDER_BLOCK_NAME_LEN
+                            );
+                            println!("{first_name:>30}:{i:2} {second_name:>30}:{i2:2}");
+                        } else {
+                            println!("{first_name:>30}:{i:2}");
+                        }
                     }
                 }
                 println!("e) Edit lexeme. f) Finished editing flags.");
