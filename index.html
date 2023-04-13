@@ -22,6 +22,7 @@ padding:0 10px
         <option value="repeat">Verb. Verb. Repeat</option>
         <option value="why-buy-when-is-free">Why buy the Noun when the Noun is free?</option>
         <option value="let-lie">Let Adjective Nouns lie</option>
+        <option value="no-goes-unpunished">No Adjective Noun goes unpunished</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -273,6 +274,11 @@ Why buy the ${rollNoun()} when the ${rollSingularOrMassNoun()} is free?
             case "let-lie":
             output(`
 Let ${rollAdjective()} ${rollPluralOrMassNoun()} lie.
+`);
+            break
+            case "no-goes-unpunished":
+            output(`
+No ${rollAdjective()} ${rollSingularOrMassNoun()} goes unpunished.
 `);
             break
             default:
