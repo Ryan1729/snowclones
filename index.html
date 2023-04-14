@@ -23,6 +23,7 @@ padding:0 10px
         <option value="why-buy-when-is-free">Why buy the Noun when the Noun is free?</option>
         <option value="let-lie">Let Adjective Nouns lie</option>
         <option value="no-goes-unpunished">No Adjective Noun goes unpunished</option>
+        <option value="the-the-and-the">The Adjective, the Adjective, and the Adjective.</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -279,6 +280,11 @@ Let ${rollAdjective()} ${rollPluralOrMassNoun()} lie.
             case "no-goes-unpunished":
             output(`
 No ${rollAdjective()} ${rollSingularOrMassNoun()} goes unpunished.
+`);
+            break
+            case "the-the-and-the":
+            output(`
+The ${rollAdjective()}, the ${rollAdjective()}, and the ${rollAdjective()}.
 `);
             break
             default:
