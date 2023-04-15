@@ -24,6 +24,7 @@ padding:0 10px
         <option value="let-lie">Let Adjective Nouns lie</option>
         <option value="no-goes-unpunished">No Adjective Noun goes unpunished</option>
         <option value="the-the-and-the">The Adjective, the Adjective, and the Adjective.</option>
+        <option value="the-catches-the">The Adjective Noun catches the Noun.</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -285,6 +286,11 @@ No ${rollAdjective()} ${rollSingularOrMassNoun()} goes unpunished.
             case "the-the-and-the":
             output(`
 The ${rollAdjective()}, the ${rollAdjective()}, and the ${rollAdjective()}.
+`);
+            break
+            case "the-catches-the":
+            output(`
+The ${rollAdjective()} ${rollSingularOrMassNoun()} catches the ${rollNoun()}.
 `);
             break
             default:
