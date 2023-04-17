@@ -25,6 +25,7 @@ padding:0 10px
         <option value="no-goes-unpunished">No Adjective Noun goes unpunished</option>
         <option value="the-the-and-the">The Adjective, the Adjective, and the Adjective.</option>
         <option value="the-catches-the">The Adjective Noun catches the Noun.</option>
+        <option value="the-is-mightier-than-the">The Noun is mightier than the Noun.</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -291,6 +292,11 @@ The ${rollAdjective()}, the ${rollAdjective()}, and the ${rollAdjective()}.
             case "the-catches-the":
             output(`
 The ${rollAdjective()} ${rollSingularOrMassNoun()} catches the ${rollNoun()}.
+`);
+            break
+            case "the-is-mightier-than-the":
+            output(`
+The ${rollSingularOrMassNoun()} is mightier than the ${rollSingularOrMassNoun()}.
 `);
             break
             default:
