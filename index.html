@@ -26,6 +26,7 @@ padding:0 10px
         <option value="the-the-and-the">The Adjective, the Adjective, and the Adjective.</option>
         <option value="the-catches-the">The Adjective Noun catches the Noun.</option>
         <option value="the-is-mightier-than-the">The Noun is mightier than the Noun.</option>
+        <option value="you-cant-your-and-it-to">You can't Verb your Noun and Verb it too.</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -100,7 +101,8 @@ const setup = (table) => {
     const transitiveVerbs = [];
     const thirdPersonSingularSimplePresentVerbs = [];
     const firstPersonSingularSimplePresentVerbs = [];
-    const intransitivefirstPersonSingularSimplePresentVerbs = [];
+    const intransitiveFirstPersonSingularSimplePresentVerbs = [];
+    const transitiveFirstPersonSingularSimplePresentVerbs = [];
     const transitiveThirdPersonSingularSimplePresentVerb = [];
     const adjectives = [];
 
@@ -170,7 +172,14 @@ const setup = (table) => {
             (flags1 & INTRANSITIVE_VERB)
             && (flags2 & FIRST_PERSON_SINGULAR_VERB)
         ) {
-            intransitivefirstPersonSingularSimplePresentVerbs.push(lexeme)
+            intransitiveFirstPersonSingularSimplePresentVerbs.push(lexeme)
+        }
+
+        if (
+            (flags1 & TRANSITIVE_VERB)
+            && (flags2 & FIRST_PERSON_SINGULAR_VERB)
+        ) {
+            transitiveFirstPersonSingularSimplePresentVerbs.push(lexeme)
         }
 
         if (
@@ -215,7 +224,8 @@ const setup = (table) => {
     const rollPluralNoun = () => rollFrom(pluralNouns);
     const rollSingularOrMassNoun = () => rollFrom(singularOrMassNouns);
     const rollPluralOrMassNoun = () => rollFrom(pluralOrMassNouns);
-    const rollIntransitivefirstPersonSingularSimplePresentVerb = () => rollFrom(intransitivefirstPersonSingularSimplePresentVerbs);
+    const rollIntransitiveFirstPersonSingularSimplePresentVerb = () => rollFrom(intransitiveFirstPersonSingularSimplePresentVerbs);
+    const rollTransitiveFirstPersonSingularSimplePresentVerb = () => rollFrom(transitiveFirstPersonSingularSimplePresentVerbs);
     const rollFirstPersonSingularSimplePresentVerb = () => rollFrom(firstPersonSingularSimplePresentVerbs);
     const rollThirdPersonSingularSimplePresentVerb = () => rollFrom(thirdPersonSingularSimplePresentVerbs);
     const rollTransitiveThirdPersonSingularSimplePresentVerb = () => rollFrom(transitiveThirdPersonSingularSimplePresentVerb);
@@ -266,7 +276,7 @@ And I's the ${rollSingularNoun()} that ${rollTransitiveThirdPersonSingularSimple
             break
             case "repeat":
                 output(`
-${capitalizeFirst(rollIntransitivefirstPersonSingularSimplePresentVerb())}. ${capitalizeFirst(rollIntransitivefirstPersonSingularSimplePresentVerb())}. Repeat.
+${capitalizeFirst(rollIntransitiveFirstPersonSingularSimplePresentVerb())}. ${capitalizeFirst(rollIntransitiveFirstPersonSingularSimplePresentVerb())}. Repeat.
 `);
             break
             case "why-buy-when-is-free":
@@ -297,6 +307,11 @@ The ${rollAdjective()} ${rollSingularOrMassNoun()} catches the ${rollNoun()}.
             case "the-is-mightier-than-the":
             output(`
 The ${rollSingularOrMassNoun()} is mightier than the ${rollSingularOrMassNoun()}.
+`);
+            break
+            case "you-cant-your-and-it-to":
+            output(`
+You can't ${rollTransitiveFirstPersonSingularSimplePresentVerb()} your ${rollSingularOrMassNoun()} and ${rollTransitiveFirstPersonSingularSimplePresentVerb()} it too.
 `);
             break
             default:
