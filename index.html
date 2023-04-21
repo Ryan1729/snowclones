@@ -23,11 +23,12 @@ padding:0 10px
         <option value="why-buy-when-is-free">Why buy the Noun when the Noun is free?</option>
         <option value="let-lie">Let Adjective Nouns lie</option>
         <option value="no-goes-unpunished">No Adjective Noun goes unpunished</option>
-        <option value="the-the-and-the">The Adjective, the Adjective, and the Adjective.</option>
-        <option value="the-catches-the">The Adjective Noun catches the Noun.</option>
-        <option value="the-is-mightier-than-the">The Noun is mightier than the Noun.</option>
-        <option value="you-cant-your-and-it-to">You can't Verb your Noun and Verb it too.</option>
-        <option value="is-the-new">Adjective/Noun is the new Adjective/Noun.</option>
+        <option value="the-the-and-the">The Adjective, the Adjective, and the Adjective</option>
+        <option value="the-catches-the">The Adjective Noun catches the Noun</option>
+        <option value="the-is-mightier-than-the">The Noun is mightier than the Noun</option>
+        <option value="you-cant-your-and-it-to">You can't Verb your Noun and Verb it too</option>
+        <option value="is-the-new">Adjective/Noun is the new Adjective/Noun</option>
+        <option value="the-aint-what-it-used-to-be">The Adjective Adjective Noun ain't what it used to be</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -254,6 +255,16 @@ const setup = (table) => {
     const rollThirdPersonSingularSimplePresentVerb = () => rollFrom(thirdPersonSingularSimplePresentVerbs);
     const rollTransitiveThirdPersonSingularSimplePresentVerb = () => rollFrom(transitiveThirdPersonSingularSimplePresentVerb);
     const rollAdjective = () => rollFrom(adjectives);
+    const rollAdjectiveBlock = () => rollFrom(nonEmptyAdjectiveBlockIndexes);
+    const rollAdjectiveFromBlock = (block) => rollFrom(adjectiveBlocks[block]);
+    const rollAdjectivePair = () => {
+        const blocks = [
+            rollAdjectiveBlock(),
+            rollAdjectiveBlock()
+        ];
+        blocks.sort();
+        return blocks.map(rollAdjectiveFromBlock);
+    };
 
     const capitalizeFirst = (s) => (
         s.charAt(0).toUpperCase() + s.slice(1)
@@ -345,12 +356,17 @@ You can't ${rollTransitiveFirstPersonSingularSimplePresentVerb()} your ${rollSin
 ${capitalizeFirst(rollSingularOrMassNoun())} is the new ${rollSingularOrMassNoun()}.
 `);
                 } else {
-                    const selectedAdjectives = adjectiveBlocks[nonEmptyAdjectiveBlockIndexes[i]]
                     output(`
-${rollFrom(selectedAdjectives)} is the new ${rollFrom(selectedAdjectives)}.
+${rollAdjectiveFromBlock(nonEmptyAdjectiveBlockIndexes[i])} is the new ${rollAdjectiveFromBlock(nonEmptyAdjectiveBlockIndexes[i])}.
 `);
                 }
             } break
+            case "the-aint-what-it-used-to-be":
+                let [adj1, adj2] = rollAdjectivePair()
+            output(`
+The ${adj1} ${adj2} ${rollSingularOrMassNoun()} ain't what it used to be.
+`);
+            break
             default:
                 output("Unhandled option: " + selected)
             break
