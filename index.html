@@ -262,7 +262,7 @@ const setup = (table) => {
             rollAdjectiveBlock(),
             rollAdjectiveBlock()
         ];
-        blocks.sort();
+        blocks.sort((a, b) => a - b);
         return blocks.map(rollAdjectiveFromBlock);
     };
 
