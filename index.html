@@ -29,6 +29,7 @@ padding:0 10px
         <option value="you-cant-your-and-it-to">You can't Verb your Noun and Verb it too</option>
         <option value="is-the-new">Adjective/Noun is the new Adjective/Noun</option>
         <option value="the-aint-what-it-used-to-be">The Adjective Adjective Noun ain't what it used to be</option>
+        <option value="dont-your-before-they">Don't Verb your Nouns before they Verb</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -365,6 +366,11 @@ ${rollAdjectiveFromBlock(nonEmptyAdjectiveBlockIndexes[i])} is the new ${rollAdj
                 let [adj1, adj2] = rollAdjectivePair()
             output(`
 The ${adj1} ${adj2} ${rollSingularOrMassNoun()} ain't what it used to be.
+`);
+            break
+            case "dont-your-before-they":
+            output(`
+Don't ${rollFirstPersonSingularSimplePresentVerb()} your ${rollPluralNoun()} before they ${rollFirstPersonSingularSimplePresentVerb()}.
 `);
             break
             default:
