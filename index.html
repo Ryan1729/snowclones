@@ -30,6 +30,7 @@ padding:0 10px
         <option value="is-the-new">Adjective/Noun is the new Adjective/Noun</option>
         <option value="the-aint-what-it-used-to-be">The Adjective Adjective Noun ain't what it used to be</option>
         <option value="dont-your-before-they">Don't Verb your Nouns before they Verb</option>
+        <option value="the-and-the">The Adjective Adjective Nouns and the Adjective Adjective Noun</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -371,6 +372,13 @@ The ${adj1} ${adj2} ${rollSingularOrMassNoun()} ain't what it used to be.
             case "dont-your-before-they":
             output(`
 Don't ${rollFirstPersonSingularSimplePresentVerb()} your ${rollPluralNoun()} before they ${rollFirstPersonSingularSimplePresentVerb()}.
+`);
+            break
+            case "the-and-the":
+                let [adj1_1, adj1_2] = rollAdjectivePair()
+                let [adj2_1, adj2_2] = rollAdjectivePair()
+            output(`
+The ${adj1_1} ${adj1_2} ${rollPluralNoun()} and the ${adj2_1} ${adj2_2} ${rollSingularOrMassNoun()}
 `);
             break
             default:
