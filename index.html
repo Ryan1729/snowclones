@@ -31,6 +31,7 @@ padding:0 10px
         <option value="the-aint-what-it-used-to-be">The Adjective Adjective Noun ain't what it used to be</option>
         <option value="dont-your-before-they">Don't Verb your Nouns before they Verb</option>
         <option value="the-and-the">The Adjective Adjective Nouns and the Adjective Adjective Noun</option>
+        <option value="hey-and-a-first-buddy">Hey, Noun and a Noun, first, buddy</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -249,6 +250,7 @@ const setup = (table) => {
     const rollNoun = () => rollFrom(nouns);
     const rollSingularNoun = () => rollFrom(singularNouns);
     const rollPluralNoun = () => rollFrom(pluralNouns);
+    const rollMassNoun = () => rollFrom(massNouns);
     const rollSingularOrMassNoun = () => rollFrom(singularOrMassNouns);
     const rollPluralOrMassNoun = () => rollFrom(pluralOrMassNouns);
     const rollIntransitiveFirstPersonSingularSimplePresentVerb = () => rollFrom(intransitiveFirstPersonSingularSimplePresentVerbs);
@@ -379,6 +381,11 @@ Don't ${rollFirstPersonSingularSimplePresentVerb()} your ${rollPluralNoun()} bef
                 let [adj2_1, adj2_2] = rollAdjectivePair()
             output(`
 The ${adj1_1} ${adj1_2} ${rollPluralNoun()} and the ${adj2_1} ${adj2_2} ${rollSingularOrMassNoun()}
+`);
+            break
+            case "hey-and-a-first-buddy":
+            output(`
+Hey, ${rollMassNoun()} and a ${rollSingularNoun()}, first, buddy!
 `);
             break
             default:
