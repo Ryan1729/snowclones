@@ -32,6 +32,7 @@ padding:0 10px
         <option value="dont-your-before-they">Don't Verb your Nouns before they Verb</option>
         <option value="the-and-the">The Adjective Adjective Nouns and the Adjective Adjective Noun</option>
         <option value="hey-and-a-first-buddy">Hey, Noun and a Noun, first, buddy</option>
+        <option value="crouching-hidden">Crouching Noun, Hidden Noun</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -386,6 +387,11 @@ The ${adj1_1} ${adj1_2} ${rollPluralNoun()} and the ${adj2_1} ${adj2_2} ${rollSi
             case "hey-and-a-first-buddy":
             output(`
 Hey, ${rollMassNoun()} and a ${rollSingularNoun()}, first, buddy!
+`);
+            break
+            case "crouching-hidden":
+            output(`
+Crouching ${rollSingularNoun()}, Hidden ${rollSingularNoun()}
 `);
             break
             default:

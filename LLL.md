@@ -16,8 +16,8 @@ The first three bytes each are 108, AKA 0x6C, AKA ASCII lowercase l.
 The fourth byte is the version number. That is, a value of zero, (all
 bits zero) corresponds to version 0. In contrast a version of 48 would
 corrspond to version 48, given that 49 different versions are deemed
-necessary. (Note that 48 is the value of the ASCII value of the numeral
-"0" is 48.)
+necessary. (Note that 48 is the ASCII value of the numeral
+"0".)
 
 ## Block Format (Version 0)
 
