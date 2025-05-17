@@ -33,6 +33,7 @@ padding:0 10px
         <option value="the-and-the">The Adjective Adjective Nouns and the Adjective Adjective Noun</option>
         <option value="hey-and-a-first-buddy">Hey, Noun and a Noun, first, buddy</option>
         <option value="crouching-hidden">Crouching Noun, Hidden Noun</option>
+        <option value="is-the-that">Adjective is the Noun that Verbs the Noun(s)</option>
     </select>
     <button id="get-snowclone">Randomly Fill Snowclone</button>
     <p id="output-snowclone"></p>
@@ -392,6 +393,11 @@ Hey, ${rollMassNoun()} and a ${rollSingularNoun()}, first, buddy!
             case "crouching-hidden":
             output(`
 Crouching ${rollSingularNoun()}, Hidden ${rollSingularNoun()}
+`);
+            break
+            case "is-the-that":
+                output(`
+${capitalizeFirst(rollAdjective())} is the ${rollSingularNoun()} that ${rollTransitiveThirdPersonSingularSimplePresentVerb()} the ${rollNoun()}.
 `);
             break
             default:
